@@ -15,3 +15,5 @@ npm install
 npm run dev
 
 ```
+
+After, please open a web browser and go to url: `http://localhost:5173`
