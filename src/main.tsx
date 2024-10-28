@@ -4,10 +4,10 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider } from "react-router-dom";
 import { persistQueryClientToLocalStorage, rehydrateQueryClientFromLocalStorage } from "@/utils";
+import router from "@/routers";
 import "react-toastify/dist/ReactToastify.css";
 import "@radix-ui/themes/styles.css";
 import "@/styles/app.css";
-import router from "@/routers";
 
 const queryClient: QueryClient = new QueryClient({});
 
