@@ -21,13 +21,33 @@ export const persistQueryClientToLocalStorage = (queryClient: QueryClient, stora
 export const rehydrateQueryClientFromLocalStorage = (queryClient: QueryClient, storageKey = "REACT_QUERY_CACHE") => {
   const encryptedCache = localStorage.getItem(storageKey);
 
+  if (!encryptedCache) {
+    console.warn("No cache data found in local storage.");
+    return;
+  }
+
   try {
-    const decryptedCache = decryptData(encryptedCache!);
+    const decryptedCache = decryptData(encryptedCache);
+
+    if (!decryptedCache) {
+      console.warn("Decryption returned null or an invalid format.");
+      return;
+    }
+
     const deserializedCache = JSON.parse(decryptedCache);
 
+    if (!Array.isArray(deserializedCache)) {
+      console.warn("Deserialized cache is not an array.");
+      return;
+    }
+
     deserializedCache.forEach(({ queryKey, state }: any) => {
-      queryClient.setQueryData(queryKey, state.data);
-      queryClient.getQueryCache().find(queryKey)?.setState(state);
+      if (queryKey && state) {
+        queryClient.setQueryData(queryKey, state.data);
+        queryClient.getQueryCache().find(queryKey)?.setState(state);
+      } else {
+        console.warn("Invalid cache item structure:", { queryKey, state });
+      }
     });
   } catch (error) {
     console.error("Failed to decrypt or deserialize the cache data:", error);
