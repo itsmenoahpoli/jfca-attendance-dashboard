@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+button {
+  cursor: pointer !important;
+}
+
+#auth-layout {
+  background-color: #f5f8f9;
+  background-image: url("@/assets/auth-bg.svg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: top right;
+}
