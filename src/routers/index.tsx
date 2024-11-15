@@ -1,7 +1,7 @@
 import React from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LazyLoadComponent } from "@/components";
-import { AuthLayout } from "@/layouts";
+import { AuthLayout, DashboardLayout } from "@/layouts";
 import { ROUTES } from "@/constants";
 
 /**
@@ -14,10 +14,19 @@ const ErrorPage = LazyLoadComponent(React.lazy(() => import("@/views/ErrorPage")
  */
 const LoginPage = LazyLoadComponent(React.lazy(() => import("@/views/auth/LoginPage")));
 
+/**
+ * Dashboard
+ */
+const OverviewPage = LazyLoadComponent(React.lazy(() => import("@/views/dashboard/OverviewPage")));
+
 const router = createBrowserRouter([
   {
     path: "*",
     element: ErrorPage,
+  },
+  {
+    path: "/",
+    element: <Navigate to={ROUTES.WEB.LOGIN} />,
   },
   {
     path: "/auth",
@@ -26,6 +35,16 @@ const router = createBrowserRouter([
       {
         path: ROUTES.WEB.LOGIN,
         element: LoginPage,
+      },
+    ],
+  },
+  {
+    path: "/dashboard",
+    element: <DashboardLayout />,
+    children: [
+      {
+        path: ROUTES.WEB.DASHBOARD_HOME,
+        element: OverviewPage,
       },
     ],
   },
