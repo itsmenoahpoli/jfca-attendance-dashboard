@@ -1,0 +1,27 @@
+@import "tailwindcss";
+@import "@radix-ui/themes/styles.css";
+
+* {
+  font-family: "Inter", serif !important;
+  font-optical-sizing: auto !important;
+}
+
+#auth-layout {
+  background-image: url("./../assets/images/auth-bg.jpg");
+  background-size: contain;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.rt-TextFieldRoot,
+.rt-TextFieldInput {
+  @apply !h-[40px];
+}
+
+.rt-TextFieldInput {
+  @apply !px-1;
+}
+
+.rt-Button {
+  @apply !h-[40px] cursor-pointer;
+}
