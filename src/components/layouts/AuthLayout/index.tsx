@@ -11,7 +11,7 @@ export const AuthLayout: React.FC = () => {
         justify="center"
         className="h-screen w-full bg-white overflow-hidden relative pt-[5%]"
       >
-        <div className="w-[380px]" style={{ zoom: 0.9 }}>
+        <div className="w-[380px]" style={{ zoom: 0.95 }}>
           <div className="!p-8">
             <Outlet />
           </div>

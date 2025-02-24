@@ -71,7 +71,7 @@ export const SigninForm: React.FC = () => {
 
           <Button
             className="!font-bold mt-4"
-            color="green"
+            color="blue"
             type="submit"
             disabled={loading}
             loading={loading}
