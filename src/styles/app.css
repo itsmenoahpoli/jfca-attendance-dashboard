@@ -2,15 +2,8 @@
 @import "@radix-ui/themes/styles.css";
 
 * {
-  font-family: "Inter", serif !important;
+  font-family: "Inter" !important;
   font-optical-sizing: auto !important;
-}
-
-#auth-layout {
-  background-image: url("./../assets/images/auth-bg.jpg");
-  background-size: contain;
-  background-position: center center;
-  background-repeat: no-repeat;
 }
 
 .rt-TextFieldRoot,

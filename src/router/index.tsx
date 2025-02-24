@@ -1,7 +1,11 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AuthLayout, DashboardLayout } from "@/components";
-import { SigninPage, OverviewPage, PatientProfilesListPage } from "@/views";
-import { WEB_ROUTES, AUTH_ROUTE_PREFIX, DASHBOARD_ROUTE_PREFIX } from "../constants";
+import { SigninPage, OverviewPage } from "@/views";
+import {
+  WEB_ROUTES,
+  AUTH_ROUTE_PREFIX,
+  DASHBOARD_ROUTE_PREFIX,
+} from "@/constants";
 
 const router = createBrowserRouter([
   {
@@ -25,10 +29,6 @@ const router = createBrowserRouter([
       {
         path: WEB_ROUTES.DASHBOARD_OVERVIEW,
         element: <OverviewPage />,
-      },
-      {
-        path: WEB_ROUTES.DASHBOARD_PATIENT_PROFILES_LIST,
-        element: <PatientProfilesListPage />,
       },
     ],
   },

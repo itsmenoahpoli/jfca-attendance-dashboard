@@ -12,8 +12,8 @@ export const SigninForm: React.FC = () => {
     handleSubmit,
   } = useForm<SigninCredentials>({
     defaultValues: {
-      email: "admin@pmrfacility.com",
-      password: "CT0bFG3MUW",
+      email: "admin@domain.com",
+      password: "password",
     },
   });
 
@@ -44,7 +44,9 @@ export const SigninForm: React.FC = () => {
               readOnly={loading}
               autoFocus
             />
-            {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-xs">{errors.email.message}</p>
+            )}
           </Flex>
           <Flex direction="column" gap="1">
             <p className="text-xs text-gray-800">Password</p>
@@ -56,7 +58,9 @@ export const SigninForm: React.FC = () => {
               })}
               readOnly={loading}
             />
-            {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-red-500 text-xs">{errors.password.message}</p>
+            )}
           </Flex>
 
           <Flex justify="end">
