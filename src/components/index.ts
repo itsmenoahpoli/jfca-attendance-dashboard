@@ -4,6 +4,11 @@
 export { AuthLayout, DashboardLayout } from "./layouts";
 
 /**
+ * Guards
+ */
+export { AuthGuard } from "./guards/AuthGuard";
+
+/**
  * App components
  */
 export { AppLoading } from "./app/AppLoading";

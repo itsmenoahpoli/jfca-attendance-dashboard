@@ -1,10 +1,8 @@
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { useAtom } from "jotai";
-import { useResetAtom } from "jotai/utils";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useApi } from "@/hooks";
-import { authStoreAtom } from "@/stores";
+import { useAuthStore } from "@/stores/auth.store";
 import { API_ROUTES, WEB_ROUTES } from "@/constants";
 import { HttpStatusCode } from "@@types/http.d";
 import { type SigninCredentials } from "@@types/auth.d";
@@ -12,25 +10,20 @@ import { type SigninApiResponse } from "@@types/response.d";
 
 export const useAuthService = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { $baseApi } = useApi();
-  const [, setAuthData] = useAtom(authStoreAtom);
-  const resetAuthStore = useResetAtom(authStoreAtom);
+  const { setAuth, resetAuth } = useAuthStore();
 
   const signinCredentials = async (
     credentials: SigninCredentials,
     setLoading: React.Dispatch<React.SetStateAction<boolean>>
   ) => {
-    return navigate(WEB_ROUTES.DASHBOARD_OVERVIEW);
     return await $baseApi
       .post<SigninApiResponse>(API_ROUTES.AUTH.SIGN_IN, credentials)
       .then((response) => {
-        const { account_enabled, session, token, user } = response.data;
+        const { session, token, user } = response.data;
 
-        if (!account_enabled) {
-          return toast.error("Unable to sign-in, account is disabled");
-        }
-
-        setAuthData({
+        setAuth({
           session,
           token,
           user,
@@ -38,8 +31,10 @@ export const useAuthService = () => {
 
         setTimeout(() => {
           setLoading(false);
-
-          navigate(WEB_ROUTES.DASHBOARD_OVERVIEW);
+          const returnUrl =
+            (location.state as any)?.from?.pathname ||
+            WEB_ROUTES.DASHBOARD_OVERVIEW;
+          navigate(returnUrl);
         }, 1500);
       })
       .catch((error) => {
@@ -53,7 +48,8 @@ export const useAuthService = () => {
   };
 
   const signoutUser = () => {
-    resetAuthStore();
+    resetAuth();
+    navigate(WEB_ROUTES.SIGN_IN);
   };
 
   return {

@@ -32,25 +32,20 @@ const MyAccountDropdown: React.FC<{ userName: string }> = (props) => {
     setOpen(isOpen);
   };
 
-  const handleNavigate = (url: string) => {
-    handleDropdownOpen(false);
-    console.log(url);
-  };
-
-  console.log(handleNavigate);
-
   return (
     <DropdownMenu.Root open={open} onOpenChange={setOpen}>
       <DropdownMenu.Trigger>
         <button>
-          <Avatar size="3" radius="full" fallback={FORMATTERS.getInitials(props.userName)} />
+          <Avatar
+            size="3"
+            radius="full"
+            className="!bg-orange-400"
+            fallback={FORMATTERS.getInitials(props.userName)}
+          />
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>
-        <DropdownMenu.Item>My Account</DropdownMenu.Item>
-        <DropdownMenu.Item>Change Password</DropdownMenu.Item>
-        <DropdownMenu.Item>Session Logs</DropdownMenu.Item>
-        <DropdownMenu.Separator />
+        {/* <DropdownMenu.Separator /> */}
         <DropdownMenu.Item color="red" onSelect={(e) => e.preventDefault()}>
           <AppSignoutButton handleDropdownOpen={handleDropdownOpen} />
         </DropdownMenu.Item>
@@ -73,7 +68,7 @@ export const ContentNavbar: React.FC = () => {
       </div>
 
       <Flex direction="row" justify="end" gap="5">
-        <MyAccountDropdown userName={userName!} />
+        <MyAccountDropdown userName={userName ?? "ADMINISTRATOR"} />
       </Flex>
     </Flex>
   );

@@ -8,7 +8,7 @@ export const SigninPage: React.FC = () => {
       <img
         src={ASSETS.BRAND}
         alt="JCFA Logo"
-        className="w-[200px] mx-auto mb-4"
+        className="w-[150px] mx-auto mb-4"
       />
       <h1 className="text-2xl text-center text-black font-bold">
         JFCA Attendance Monitoring System

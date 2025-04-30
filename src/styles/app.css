@@ -15,6 +15,11 @@
   @apply !px-1;
 }
 
+/* Add these new styles */
+.rt-SelectTrigger {
+  @apply !h-[40px];
+}
+
 .rt-Button {
   @apply !h-[40px] cursor-pointer;
 }

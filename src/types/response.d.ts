@@ -1,3 +1,3 @@
 import { type AuthStoreData } from "./auth";
 
-export type SigninApiResponse = { account_enabled: boolean } & AuthStoreData;
+export type SigninApiResponse = { is_enabled: boolean } & AuthStoreData;

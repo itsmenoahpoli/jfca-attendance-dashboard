@@ -1,6 +1,13 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AuthLayout, DashboardLayout } from "@/components";
-import { SigninPage, OverviewPage } from "@/views";
+import { AuthGuard } from "@/components/guards/AuthGuard";
+import {
+  SigninPage,
+  OverviewPage,
+  StudentsPage,
+  ClassesPage,
+  AttendanceReportsPage,
+} from "@/views";
 import {
   WEB_ROUTES,
   AUTH_ROUTE_PREFIX,
@@ -24,11 +31,27 @@ const router = createBrowserRouter([
   },
   {
     path: DASHBOARD_ROUTE_PREFIX,
-    element: <DashboardLayout />,
+    element: (
+      <AuthGuard>
+        <DashboardLayout />
+      </AuthGuard>
+    ),
     children: [
       {
         path: WEB_ROUTES.DASHBOARD_OVERVIEW,
         element: <OverviewPage />,
+      },
+      {
+        path: WEB_ROUTES.DASHBOARD_STUDENTS,
+        element: <StudentsPage />,
+      },
+      {
+        path: WEB_ROUTES.DASHBOARD_CLASSES,
+        element: <ClassesPage />,
+      },
+      {
+        path: WEB_ROUTES.DASHBOARD_ATTENDANCE_REPORTS,
+        element: <AttendanceReportsPage />,
       },
     ],
   },

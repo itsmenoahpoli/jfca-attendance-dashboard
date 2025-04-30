@@ -1,17 +1,13 @@
 import React from "react";
-import { useAtom } from "jotai";
-import { layoutStoreAtom } from "@/stores";
+import { useLayoutStore } from "@/stores/layout.store";
 
 export const useLayout = () => {
   const [screenWidth, setScreenWidth] = React.useState(window.innerWidth);
-  const [layoutStoreData, setLayoutStoreData] = useAtom(layoutStoreAtom);
+  const { sidebarCollapsed, setSidebarCollapsed } = useLayoutStore();
 
   const toggleSidebar = (isCollapsed?: boolean) => {
-    const collapsedBool: boolean = isCollapsed ? isCollapsed : !layoutStoreData.sidebarCollapsed;
-
-    setLayoutStoreData({
-      sidebarCollapsed: collapsedBool,
-    });
+    const collapsedBool: boolean = isCollapsed ?? !sidebarCollapsed;
+    setSidebarCollapsed(collapsedBool);
   };
 
   const handleResize = () => {
@@ -27,10 +23,11 @@ export const useLayout = () => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobileScreen]);
 
   return {
-    sidebarCollapsed: layoutStoreData.sidebarCollapsed,
+    sidebarCollapsed,
     toggleSidebar,
     screenWidth,
     isMobileScreen,

@@ -13,6 +13,9 @@ const WEB_ROUTES = {
   INDEX: "/",
   SIGN_IN: appendAuthPrefix("/signin"),
   DASHBOARD_OVERVIEW: appendDashboardPrefix("/overview"),
+  DASHBOARD_STUDENTS: appendDashboardPrefix("/students"),
+  DASHBOARD_CLASSES: appendDashboardPrefix("/classes"),
+  DASHBOARD_ATTENDANCE_REPORTS: appendDashboardPrefix("/attendance-reports"),
 };
 
 const API_ROUTES = {

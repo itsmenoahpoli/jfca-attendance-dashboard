@@ -9,6 +9,7 @@ type Props = {
 export const AppSignoutButton: React.FC<Props> = (props) => {
   const handleConfirm = () => {
     props.handleDropdownOpen(false);
+    window.location.href = "/auth/signin";
   };
 
   const handleCancel = () => {
@@ -25,7 +26,9 @@ export const AppSignoutButton: React.FC<Props> = (props) => {
         </button>
       </AlertDialog.Trigger>
       <AlertDialog.Content className="w-1/5">
-        <AlertDialog.Title className="!text-md max-sm:!text-sm">Sign Out</AlertDialog.Title>
+        <AlertDialog.Title className="!text-md max-sm:!text-sm">
+          Sign Out
+        </AlertDialog.Title>
         <AlertDialog.Description className="!text-sm max-sm:!text-xs text-gray-700">
           Do you confirm to sign out and end your session?
         </AlertDialog.Description>

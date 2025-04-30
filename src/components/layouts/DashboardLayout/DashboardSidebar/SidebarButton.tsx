@@ -32,11 +32,15 @@ export const SidebarButton: React.FC<Props> = (props) => {
         className="flex flex-row items-center gap-x-2 hover:bg-slate-500 !hover:text-white cursor-pointer rounded-lg p-2"
         onClick={() => props.handleClickItem(props.data.url)}
       >
-        <div className={`${props.hideLabels ? "w-full flex justify-center" : ""}`}>
+        <div
+          className={`${props.hideLabels ? "w-full flex justify-center" : ""}`}
+        >
           {props.data.icon}
         </div>
 
-        {props.hideLabels ? null : <p className="text-xs text-white">{props.data.label}</p>}
+        {props.hideLabels ? null : (
+          <p className="text-xs text-white">{props.data.label}</p>
+        )}
 
         {props.data.children?.length && props.toggled !== undefined ? (
           <CollapseIcon isCollapsed={props.toggled} />

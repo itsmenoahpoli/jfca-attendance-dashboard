@@ -1,13 +1,27 @@
-import { atomWithStorage } from "jotai/utils";
-import { storeStorage } from "./util";
-import { type AuthStoreData } from "@@types/auth";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { AuthStoreData } from "@@types/auth";
 
-export const authStoreAtom = atomWithStorage<AuthStoreData>(
-  "authData",
-  {
-    session: "",
-    token: "",
-    user: undefined,
-  },
-  storeStorage<AuthStoreData>()
+interface AuthState extends AuthStoreData {
+  setAuth: (data: Omit<AuthStoreData, "setAuth">) => void;
+  resetAuth: () => void;
+}
+
+const initialState: Omit<AuthState, "setAuth" | "resetAuth"> = {
+  session: "",
+  token: "",
+  user: undefined,
+};
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      setAuth: (data) => set(data),
+      resetAuth: () => set(initialState),
+    }),
+    {
+      name: "auth-storage",
+    }
+  )
 );

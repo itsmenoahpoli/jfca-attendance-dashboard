@@ -1,8 +1,7 @@
-import { useAtom } from "jotai";
-import { authStoreAtom } from "@/stores";
+import { useAuthStore } from "@/stores/auth.store";
 
 export const useAuth = () => {
-  const [authData] = useAtom(authStoreAtom);
+  const authData = useAuthStore();
 
   return {
     authToken: authData.token,

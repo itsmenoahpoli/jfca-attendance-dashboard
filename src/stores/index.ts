@@ -1,2 +1,2 @@
-export { authStoreAtom } from "./auth.store";
-export { layoutStoreAtom } from "./layout.store";
+export { useAuthStore } from "./auth.store";
+export { useLayoutStore } from "./layout.store";
