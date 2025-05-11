@@ -1,10 +1,12 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Flex, TextField, Button } from "@radix-ui/themes";
 import { useAuthService } from "@/services";
 import { type SigninCredentials } from "@@types/auth";
 
 export const SigninForm: React.FC = () => {
+  const navigate = useNavigate();
   const { signinCredentials } = useAuthService();
   const {
     register,
@@ -25,9 +27,13 @@ export const SigninForm: React.FC = () => {
     return await signinCredentials(formData, setLoading);
   });
 
+  const handleOpenAttendanceModule = () => {
+    navigate("/module/attendance");
+  };
+
   return (
-    <div className="h-full w-full">
-      <form onSubmit={handleSignin}>
+    <div className="min-h-screen h-full w-full flex justify-center">
+      <form className="w-full" onSubmit={handleSignin}>
         <Flex direction="column" gap="3">
           <Flex direction="column" gap="1">
             <p className="text-xs text-gray-800">E-mail Address</p>
@@ -77,6 +83,13 @@ export const SigninForm: React.FC = () => {
             loading={loading}
           >
             SIGN IN
+          </Button>
+          <Button
+            variant="soft"
+            className="!font-bold mt-4"
+            onClick={handleOpenAttendanceModule}
+          >
+            OPEN ATTENDANCE MODULE
           </Button>
         </Flex>
       </form>

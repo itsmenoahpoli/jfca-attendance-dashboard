@@ -7,6 +7,7 @@ import {
   StudentsPage,
   ClassesPage,
   AttendanceReportsPage,
+  AttendanceModulePage,
 } from "@/views";
 import {
   WEB_ROUTES,
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
         element: <AttendanceReportsPage />,
       },
     ],
+  },
+  {
+    path: WEB_ROUTES.MODULE_ATTENDANCE,
+    element: <AttendanceModulePage />,
   },
 ]);
 

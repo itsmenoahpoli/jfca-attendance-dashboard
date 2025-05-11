@@ -22,3 +22,4 @@ export { AppSignoutButton } from "./app/AppSignoutButton";
  * Modules components
  */
 export { SigninForm } from "./modules/auth/SigninForm";
+export { AttendanceCounterModule } from "./modules/attendance/AttendanceCounterModule";

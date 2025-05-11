@@ -1,10 +1,10 @@
 import React from "react";
-import { SigninForm } from "@/components";
 import { ASSETS } from "@/constants";
+import { AttendanceCounterModule } from "@/components";
 
-export const SigninPage: React.FC = () => {
+export const AttendanceModulePage: React.FC = () => {
   return (
-    <div className="h-full w-full">
+    <div className="min-h-screen w-full flex flex-col pt-5">
       <img
         src={ASSETS.BRAND}
         alt="JCFA Logo"
@@ -14,10 +14,12 @@ export const SigninPage: React.FC = () => {
         JFCA Attendance Monitoring System
       </h1>
       <p className="text-lg text-center text-gray-900 font-medium my-6">
-        Dashboard Sign-in
+        Attandance Counter Module
       </p>
 
-      <SigninForm />
+      <div className="flex-1 h-full bg-slate-100">
+        <AttendanceCounterModule />
+      </div>
     </div>
   );
 };

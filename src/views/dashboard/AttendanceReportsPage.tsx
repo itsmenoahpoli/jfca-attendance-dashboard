@@ -146,7 +146,6 @@ const AttendanceTable: React.FC<{ data: AttendanceRecord[] }> = ({ data }) => (
 );
 
 const CalendarView: React.FC<{ data: AttendanceRecord[] }> = ({ data }) => {
-  // Transform attendance records into FullCalendar events
   const events = data.map((record) => ({
     id: record.id,
     title: `${record.studentName} - ${record.status}`,

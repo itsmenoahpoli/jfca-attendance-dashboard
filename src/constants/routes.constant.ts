@@ -1,5 +1,6 @@
 const AUTH_ROUTE_PREFIX = "/auth";
 const DASHBOARD_ROUTE_PREFIX = "/dashboard";
+const MODULE_ROUTE_PREFIX = "/module";
 
 const appendAuthPrefix = (url: string) => {
   return `${AUTH_ROUTE_PREFIX}${url}`;
@@ -9,6 +10,10 @@ const appendDashboardPrefix = (url: string) => {
   return `${DASHBOARD_ROUTE_PREFIX}${url}`;
 };
 
+const appendModulePrefix = (url: string) => {
+  return `${MODULE_ROUTE_PREFIX}${url}`;
+};
+
 const WEB_ROUTES = {
   INDEX: "/",
   SIGN_IN: appendAuthPrefix("/signin"),
@@ -16,6 +21,7 @@ const WEB_ROUTES = {
   DASHBOARD_STUDENTS: appendDashboardPrefix("/students"),
   DASHBOARD_CLASSES: appendDashboardPrefix("/classes"),
   DASHBOARD_ATTENDANCE_REPORTS: appendDashboardPrefix("/attendance-reports"),
+  MODULE_ATTENDANCE: appendModulePrefix("/attendance"),
 };
 
 const API_ROUTES = {
