@@ -13,10 +13,10 @@ export const SigninForm: React.FC = () => {
     formState: { errors },
     handleSubmit,
   } = useForm<SigninCredentials>({
-    defaultValues: {
-      email: "admin@domain.com",
-      password: "password",
-    },
+    // defaultValues: {
+    //   email: "admin@domain.com",
+    //   password: "password",
+    // },
   });
 
   const [loading, setLoading] = React.useState<boolean>(false);
