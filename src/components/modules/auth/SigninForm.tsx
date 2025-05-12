@@ -85,6 +85,7 @@ export const SigninForm: React.FC = () => {
             SIGN IN
           </Button>
           <Button
+            type="button"
             variant="soft"
             className="!font-bold mt-4"
             onClick={handleOpenAttendanceModule}
