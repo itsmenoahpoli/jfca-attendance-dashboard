@@ -1,5 +1,6 @@
 import React from "react";
-import { Flex, Select } from "@radix-ui/themes";
+import { Link } from "react-router-dom";
+import { Flex, Select, Button } from "@radix-ui/themes";
 import { WebcamScanFeed } from "./WebcamScanFeed";
 import { QrScanFeed } from "./QrScanFeed";
 
@@ -14,6 +15,17 @@ const feedOptions = [
   },
 ];
 
+const NoStudentDetectedBanner = () => {
+  return (
+    <Flex className="h-full" direction="column">
+      <h1 className="text-2xl font-bold">STUDENT DATA</h1>
+      <Flex justify="center" align="center" className="h-full">
+        <p>No data available</p>
+      </Flex>
+    </Flex>
+  );
+};
+
 export const AttendanceCounterModule: React.FC = () => {
   const [selectedFeed, setSelectedFeed] = React.useState<string>("webcam-feed");
 
@@ -23,7 +35,13 @@ export const AttendanceCounterModule: React.FC = () => {
 
   return (
     <div className="w-full h-full p-10">
-      <Flex>
+      <Link to="/">
+        <Button variant="soft" className="!font-bold">
+          Back to Home
+        </Button>
+      </Link>
+
+      <Flex className="mt-5">
         <div className="w-full pr-10">
           <Flex justify="between" align="center">
             <h1 className="text-2xl font-bold">WEBCAM FEED</h1>
@@ -43,10 +61,7 @@ export const AttendanceCounterModule: React.FC = () => {
           {selectedFeed === "webcam-feed" ? <WebcamScanFeed /> : <QrScanFeed />}
         </div>
         <div className="w-full border-l border-gray-300 pl-10">
-          <h1 className="text-2xl font-bold">STUDENT DATA</h1>
-          <Flex justify="center" align="center" className="h-full">
-            <p>No data available</p>
-          </Flex>
+          <NoStudentDetectedBanner />
         </div>
       </Flex>
     </div>
