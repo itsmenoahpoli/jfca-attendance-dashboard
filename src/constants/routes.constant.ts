@@ -28,6 +28,9 @@ const API_ROUTES = {
   AUTH: {
     SIGN_IN: appendAuthPrefix("/signin"),
   },
+  SECTIONS: {
+    LIST: "/sections",
+  },
 };
 
 export { AUTH_ROUTE_PREFIX, DASHBOARD_ROUTE_PREFIX, WEB_ROUTES, API_ROUTES };

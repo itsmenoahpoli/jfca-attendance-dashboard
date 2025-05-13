@@ -73,7 +73,15 @@ const AttendanceTable: React.FC<{ logs: AttendanceLog[] }> = ({ logs }) => (
         {logs.map((log) => (
           <tr key={log.id} className="hover:bg-gray-50">
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-              {log.type === "time-in" ? "Time-in" : "Time-out"}
+              <span
+                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                  log.type === "time-in"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-orange-100 text-orange-800"
+                }`}
+              >
+                {log.type === "time-in" ? "IN" : "OUT"}
+              </span>
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               {log.timeIn ? format(log.timeIn, "MMM d, yyyy h:mm a") : "-"}
