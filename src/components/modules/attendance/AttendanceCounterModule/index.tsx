@@ -6,7 +6,7 @@ import { QrScanFeed } from "./QrScanFeed";
 
 const feedOptions = [
   {
-    label: "Webcam Feed",
+    label: "Webcam Feed (Face Recognition)",
     value: "webcam-feed",
   },
   {
@@ -26,12 +26,34 @@ const NoStudentDetectedBanner = () => {
   );
 };
 
+const FullScreenLoader = () => {
+  return (
+    <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-50">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      <h1 className="text-md mt-5">Initializing, please wait</h1>
+    </div>
+  );
+};
+
 export const AttendanceCounterModule: React.FC = () => {
   const [selectedFeed, setSelectedFeed] = React.useState<string>("webcam-feed");
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleFeedChange = (value: string) => {
     setSelectedFeed(value);
   };
+
+  if (isLoading) {
+    return <FullScreenLoader />;
+  }
 
   return (
     <div className="w-full h-full p-10">
@@ -52,7 +74,9 @@ export const AttendanceCounterModule: React.FC = () => {
               <Select.Trigger />
               <Select.Content>
                 {feedOptions.map((option) => (
-                  <Select.Item value={option.value}>{option.label}</Select.Item>
+                  <Select.Item key={option.value} value={option.value}>
+                    {option.label}
+                  </Select.Item>
                 ))}
               </Select.Content>
             </Select.Root>
