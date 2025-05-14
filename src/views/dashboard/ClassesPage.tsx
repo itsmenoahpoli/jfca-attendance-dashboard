@@ -1,15 +1,29 @@
 import React from "react";
 import { Button, Dialog, Flex, TextField, Select } from "@radix-ui/themes";
-import { Clock, Trash2, PenSquare, Plus, Users } from "lucide-react";
+import {
+  Clock,
+  Trash2,
+  PenSquare,
+  Plus,
+  Users,
+  AlertTriangle,
+  Info,
+  Users2,
+} from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useSectionsService, type Section } from "@/services/sections.service";
+import {
+  StudentProfileForm,
+  type StudentProfileFormData,
+} from "@/components/modules/students/student-profile-form";
 
 const ClassesTable: React.FC<{
   data: Section[];
   onEdit: (section: Section) => void;
-  onDelete: (id: string) => void;
-}> = ({ data, onEdit, onDelete }) => (
+  onDelete: (section: Section) => void;
+  onViewStudents: (section: Section) => void;
+}> = ({ data, onEdit, onDelete, onViewStudents }) => (
   <div className="overflow-x-auto">
     <table className="min-w-full bg-white rounded-lg">
       <thead className="bg-gray-50">
@@ -51,7 +65,12 @@ const ClassesTable: React.FC<{
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               <Flex gap="2">
-                <Button variant="soft" color="blue" size="1">
+                <Button
+                  variant="soft"
+                  color="blue"
+                  size="1"
+                  onClick={() => onViewStudents(item)}
+                >
                   <Users size={14} />
                 </Button>
                 <Button variant="soft" color="violet" size="1">
@@ -69,7 +88,7 @@ const ClassesTable: React.FC<{
                   variant="soft"
                   color="red"
                   size="1"
-                  onClick={() => onDelete(item.id)}
+                  onClick={() => onDelete(item)}
                 >
                   <Trash2 size={14} />
                 </Button>
@@ -227,10 +246,165 @@ const AddClassDialog: React.FC<{
   );
 };
 
+const DeleteConfirmationDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  sectionName: string;
+}> = ({ open, onOpenChange, onConfirm, sectionName }) => (
+  <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Content className="max-w-md">
+      <Flex direction="column" align="center" gap="3" className="py-4">
+        <div className="p-3 bg-red-100 rounded-full">
+          <AlertTriangle className="w-8 h-8 text-red-600" />
+        </div>
+        <Dialog.Title className="text-center">Delete Section</Dialog.Title>
+        <Dialog.Description className="text-center text-gray-600">
+          Are you sure you want to delete the section "{sectionName}"? This
+          action cannot be undone.
+        </Dialog.Description>
+      </Flex>
+      <Flex gap="3" mt="4" justify="end">
+        <Dialog.Close>
+          <Button variant="soft" color="gray">
+            Cancel
+          </Button>
+        </Dialog.Close>
+        <Button color="red" onClick={onConfirm}>
+          Delete Section
+        </Button>
+      </Flex>
+    </Dialog.Content>
+  </Dialog.Root>
+);
+
+const UpdateConfirmationDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  sectionName: string;
+  updatedData: Omit<Section, "id">;
+}> = ({ open, onOpenChange, onConfirm, sectionName, updatedData }) => (
+  <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Content className="max-w-md">
+      <Flex direction="column" align="center" gap="3" className="py-4">
+        <div className="p-3 bg-blue-100 rounded-full">
+          <Info className="w-8 h-8 text-blue-600" />
+        </div>
+        <Dialog.Title className="text-center">Update Section</Dialog.Title>
+        <Dialog.Description className="text-center text-gray-600">
+          Are you sure you want to update the section "{sectionName}" with the
+          following changes?
+        </Dialog.Description>
+        <div className="w-full mt-2 p-4 bg-gray-50 rounded-lg">
+          <div className="space-y-2">
+            <div>
+              <span className="font-medium">Name:</span> {updatedData.name}
+            </div>
+            <div>
+              <span className="font-medium">Level:</span> {updatedData.level}
+            </div>
+            <div>
+              <span className="font-medium">School Year:</span>{" "}
+              {updatedData.school_year}
+            </div>
+            <div>
+              <span className="font-medium">Status:</span>{" "}
+              {updatedData.is_enabled ? "Active" : "Inactive"}
+            </div>
+          </div>
+        </div>
+      </Flex>
+      <Flex gap="3" mt="4" justify="end">
+        <Dialog.Close>
+          <Button variant="soft" color="gray">
+            Cancel
+          </Button>
+        </Dialog.Close>
+        <Button color="blue" onClick={onConfirm}>
+          Update Section
+        </Button>
+      </Flex>
+    </Dialog.Content>
+  </Dialog.Root>
+);
+
+const StudentsListDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  sectionName: string;
+  section: Section;
+}> = ({ open, onOpenChange, sectionName, section }) => {
+  const [addStudentDialogOpen, setAddStudentDialogOpen] = React.useState(false);
+
+  const handleAddStudent = (data: StudentProfileFormData) => {
+    // TODO: Implement student creation
+    console.log("Add student:", data);
+    setAddStudentDialogOpen(false);
+  };
+
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Content className="max-w-4xl">
+        <Dialog.Title className="flex items-center gap-2">
+          <Users2 className="w-5 h-5" />
+          Students List - {sectionName}
+        </Dialog.Title>
+        <div className="mt-4">
+          <div className="min-h-[400px] flex items-center justify-center">
+            <div className="text-center">
+              <div className="p-4 bg-gray-50 rounded-lg inline-block">
+                <Users2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <h3 className="text-lg font-medium text-gray-900 mb-1">
+                  No Students Found
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  This section doesn't have any students yet.
+                </p>
+                <Button
+                  color="blue"
+                  onClick={() => setAddStudentDialogOpen(true)}
+                  className="inline-flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  Add Student
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Flex gap="3" mt="4" justify="end">
+          <Dialog.Close>
+            <Button variant="soft" color="gray">
+              Close
+            </Button>
+          </Dialog.Close>
+        </Flex>
+      </Dialog.Content>
+
+      <StudentProfileForm
+        open={addStudentDialogOpen}
+        onOpenChange={setAddStudentDialogOpen}
+        onSubmit={handleAddStudent}
+        section={section}
+      />
+    </Dialog.Root>
+  );
+};
+
 export const ClassesPage: React.FC = () => {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [selectedSection, setSelectedSection] = React.useState<
     Section | undefined
+  >();
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [updateDialogOpen, setUpdateDialogOpen] = React.useState(false);
+  const [studentsListOpen, setStudentsListOpen] = React.useState(false);
+  const [sectionToDelete, setSectionToDelete] = React.useState<
+    Section | undefined
+  >();
+  const [updatedSectionData, setUpdatedSectionData] = React.useState<
+    Omit<Section, "id"> | undefined
   >();
   const queryClient = useQueryClient();
   const sectionsService = useSectionsService();
@@ -263,7 +437,9 @@ export const ClassesPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sections"] });
       setDialogOpen(false);
+      setUpdateDialogOpen(false);
       setSelectedSection(undefined);
+      setUpdatedSectionData(undefined);
       toast.success("Section updated successfully");
     },
     onError: () => {
@@ -275,6 +451,8 @@ export const ClassesPage: React.FC = () => {
     mutationFn: sectionsService.deleteSection,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sections"] });
+      setDeleteDialogOpen(false);
+      setSectionToDelete(undefined);
       toast.success("Section deleted successfully");
     },
     onError: () => {
@@ -288,7 +466,17 @@ export const ClassesPage: React.FC = () => {
 
   const handleUpdateSection = (data: Omit<Section, "id">) => {
     if (selectedSection) {
-      updateMutation.mutate({ id: selectedSection.id, data });
+      setUpdatedSectionData(data);
+      setUpdateDialogOpen(true);
+    }
+  };
+
+  const handleConfirmUpdate = () => {
+    if (selectedSection && updatedSectionData) {
+      updateMutation.mutate({
+        id: selectedSection.id,
+        data: updatedSectionData,
+      });
     }
   };
 
@@ -297,10 +485,20 @@ export const ClassesPage: React.FC = () => {
     setDialogOpen(true);
   };
 
-  const handleDeleteSection = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this section?")) {
-      deleteMutation.mutate(id);
+  const handleDeleteSection = (section: Section) => {
+    setSectionToDelete(section);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (sectionToDelete) {
+      deleteMutation.mutate(sectionToDelete.id);
     }
+  };
+
+  const handleViewStudents = (section: Section) => {
+    setSelectedSection(section);
+    setStudentsListOpen(true);
   };
 
   if (isLoading) {
@@ -323,6 +521,7 @@ export const ClassesPage: React.FC = () => {
           data={sections}
           onEdit={handleEditSection}
           onDelete={handleDeleteSection}
+          onViewStudents={handleViewStudents}
         />
 
         <Flex justify="between" align="center" mt="4">
@@ -342,6 +541,50 @@ export const ClassesPage: React.FC = () => {
         }}
         onSubmit={selectedSection ? handleUpdateSection : handleCreateSection}
         initialData={selectedSection}
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) {
+            setSectionToDelete(undefined);
+          }
+        }}
+        onConfirm={handleConfirmDelete}
+        sectionName={sectionToDelete?.name || ""}
+      />
+
+      <UpdateConfirmationDialog
+        open={updateDialogOpen}
+        onOpenChange={(open) => {
+          setUpdateDialogOpen(open);
+          if (!open) {
+            setUpdatedSectionData(undefined);
+          }
+        }}
+        onConfirm={handleConfirmUpdate}
+        sectionName={selectedSection?.name || ""}
+        updatedData={
+          updatedSectionData || {
+            name: "",
+            level: "",
+            school_year: "",
+            is_enabled: true,
+          }
+        }
+      />
+
+      <StudentsListDialog
+        open={studentsListOpen}
+        onOpenChange={(open) => {
+          setStudentsListOpen(open);
+          if (!open) {
+            setSelectedSection(undefined);
+          }
+        }}
+        sectionName={selectedSection?.name || ""}
+        section={selectedSection!}
       />
     </div>
   );
