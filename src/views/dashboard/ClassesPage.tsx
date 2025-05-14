@@ -8,15 +8,11 @@ import {
   Users,
   AlertTriangle,
   Info,
-  Users2,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useSectionsService, type Section } from "@/services/sections.service";
-import {
-  StudentProfileForm,
-  type StudentProfileFormData,
-} from "@/components/modules/students/student-profile-form";
+import { StudentsListDialog } from "@/components/modules/students/students-list-dialog";
 
 const ClassesTable: React.FC<{
   data: Section[];
@@ -342,72 +338,6 @@ const UpdateConfirmationDialog: React.FC<{
   </Dialog.Root>
 );
 
-const StudentsListDialog: React.FC<{
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  sectionName: string;
-  section: Section;
-}> = ({ open, onOpenChange, sectionName, section }) => {
-  const [addStudentDialogOpen, setAddStudentDialogOpen] = React.useState(false);
-
-  const handleAddStudent = (data: StudentProfileFormData) => {
-    // TODO: Implement student creation
-    console.log("Add student:", data);
-    setAddStudentDialogOpen(false);
-  };
-
-  return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content className="max-w-4xl">
-        <Dialog.Title className="flex items-center gap-2">
-          <Users2 className="w-5 h-5" />
-          Students List - {sectionName}
-        </Dialog.Title>
-        <Dialog.Description className="text-gray-500 mb-4">
-          View and manage students in this section.
-        </Dialog.Description>
-        <div className="mt-4">
-          <div className="min-h-[400px] flex items-center justify-center">
-            <div className="text-center">
-              <div className="p-4 bg-gray-50 rounded-lg inline-block">
-                <Users2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-lg font-medium text-gray-900 mb-1">
-                  No Students Found
-                </h3>
-                <p className="text-gray-500 mb-4">
-                  This section doesn't have any students yet.
-                </p>
-                <Button
-                  color="blue"
-                  onClick={() => setAddStudentDialogOpen(true)}
-                  className="inline-flex items-center gap-2"
-                >
-                  <Plus size={16} />
-                  Add Student
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <Flex gap="3" mt="4" justify="end">
-          <Dialog.Close>
-            <Button variant="soft" color="gray">
-              Close
-            </Button>
-          </Dialog.Close>
-        </Flex>
-      </Dialog.Content>
-
-      <StudentProfileForm
-        open={addStudentDialogOpen}
-        onOpenChange={setAddStudentDialogOpen}
-        onSubmit={handleAddStudent}
-        section={section}
-      />
-    </Dialog.Root>
-  );
-};
-
 export const ClassesPage: React.FC = () => {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [selectedSection, setSelectedSection] = React.useState<
@@ -600,7 +530,7 @@ export const ClassesPage: React.FC = () => {
           }
         }}
         sectionName={selectedSection?.name || ""}
-        section={selectedSection!}
+        section={selectedSection}
       />
     </div>
   );

@@ -13,11 +13,12 @@ const formSchema = z.object({
   gender: z.string().min(1, "Gender is required"),
   contact: z.string().min(1, "Contact number is required"),
   guardian_name: z.string().min(1, "Guardian name is required"),
-  guardian_contact: z.string().min(1, "Guardian contact is required"),
+  guardian_relation: z.string().min(1, "Guardian relation is required"),
+  guardian_mobile_number: z.string().min(1, "Guardian contact is required"),
   section: z.string().min(1, "Section is required"),
-  leftSideImage: z.string().min(1, "Left side image is required"),
-  frontSideImage: z.string().min(1, "Front side image is required"),
-  rightSideImage: z.string().min(1, "Right side image is required"),
+  leftSideImage: z.string().optional(),
+  frontSideImage: z.string().optional(),
+  rightSideImage: z.string().optional(),
 });
 
 export type StudentProfileFormData = z.infer<typeof formSchema>;
@@ -38,7 +39,8 @@ const initStudentState: StudentProfileFormData = {
   gender: "",
   contact: "",
   guardian_name: "",
-  guardian_contact: "",
+  guardian_relation: "",
+  guardian_mobile_number: "",
   section: "",
   leftSideImage: "",
   frontSideImage: "",
@@ -58,7 +60,7 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
     control,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<StudentProfileFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -66,6 +68,7 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
       ...initialData,
       section: section?.name || initialData?.section || "",
     },
+    mode: "onChange",
   });
 
   React.useEffect(() => {
@@ -106,12 +109,14 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
     setValue("gender", "");
     setValue("contact", "");
     setValue("guardian_name", "");
-    setValue("guardian_contact", "");
+    setValue("guardian_relation", "");
+    setValue("guardian_mobile_number", "");
     setValue("section", section?.name || "");
   };
 
   const onFormSubmit = (data: StudentProfileFormData) => {
-    onSubmit(data);
+    // @ts-ignore
+    onSubmit({ ...data, is_enabled: true });
     if (!initialData) {
       resetForm();
     }
@@ -129,12 +134,11 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
     >
       <Dialog.Content className="max-w-md">
         <Dialog.Title>{title}</Dialog.Title>
-        <Dialog.Description>
-          Fill in the student's information and capture their photos from
-          different angles.
+        <Dialog.Description className="text-gray-500 mb-4">
+          Fill in the student's information. Photo capture is optional.
         </Dialog.Description>
         <form onSubmit={handleSubmit(onFormSubmit)}>
-          <Flex direction="column" gap="3" className="mt-4">
+          <Flex direction="column" gap="4" className="mt-4">
             <div className="mb-4">
               {webcamError && (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -145,178 +149,259 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
                 </div>
               )}
               {!webcamError && (
-                <Webcam
-                  ref={webcamRef}
-                  screenshotFormat="image/jpeg"
-                  className="w-full rounded-lg"
-                  onUserMediaError={handleWebcamError}
-                />
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-700">
+                      Student Photos (Optional)
+                    </h3>
+                    <Button
+                      onClick={() => {
+                        setValue("leftSideImage", "");
+                        setValue("frontSideImage", "");
+                        setValue("rightSideImage", "");
+                        setCurrentCapture("front");
+                      }}
+                      variant="soft"
+                      color="gray"
+                      size="1"
+                    >
+                      Reset Photos
+                    </Button>
+                  </div>
+                  <Webcam
+                    ref={webcamRef}
+                    screenshotFormat="image/jpeg"
+                    className="w-full rounded-lg"
+                    onUserMediaError={handleWebcamError}
+                  />
+                  <Flex justify="center" mt="2">
+                    <Button
+                      onClick={captureImage}
+                      type="button"
+                      disabled={!!webcamError}
+                    >
+                      Capture{" "}
+                      {currentCapture.charAt(0).toUpperCase() +
+                        currentCapture.slice(1)}{" "}
+                      Side
+                    </Button>
+                  </Flex>
+                </>
               )}
-              <Flex justify="center" mt="2">
-                <Button
-                  onClick={captureImage}
-                  type="button"
-                  disabled={!!webcamError}
-                >
-                  Capture{" "}
-                  {currentCapture.charAt(0).toUpperCase() +
-                    currentCapture.slice(1)}{" "}
-                  Side
-                </Button>
-              </Flex>
-              {errors.leftSideImage && (
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Student Name
+              </label>
+              <Controller
+                name="name"
+                control={control}
+                render={({ field }) => (
+                  <TextField.Root
+                    type="text"
+                    placeholder="Enter student name"
+                    {...field}
+                  ></TextField.Root>
+                )}
+              />
+              {errors.name && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.leftSideImage.message}
-                </p>
-              )}
-              {errors.frontSideImage && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.frontSideImage.message}
-                </p>
-              )}
-              {errors.rightSideImage && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.rightSideImage.message}
+                  {errors.name.message}
                 </p>
               )}
             </div>
 
-            <Controller
-              name="name"
-              control={control}
-              render={({ field }) => (
-                <TextField.Root>
-                  <TextField.Slot>
-                    <input placeholder="Student Name" {...field} />
-                  </TextField.Slot>
-                  {errors.name && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.name.message}
-                    </p>
-                  )}
-                </TextField.Root>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Email Address
+              </label>
+              <Controller
+                name="email"
+                control={control}
+                render={({ field }) => (
+                  <TextField.Root
+                    type="email"
+                    placeholder="Enter email address"
+                    {...field}
+                  />
+                )}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.email.message}
+                </p>
               )}
-            />
+            </div>
 
-            <Controller
-              name="email"
-              control={control}
-              render={({ field }) => (
-                <TextField.Root>
-                  <TextField.Slot>
-                    <input
-                      placeholder="Email Address"
-                      type="email"
-                      {...field}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Gender
+              </label>
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => (
+                  <Select.Root
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <Select.Trigger
+                      placeholder="Select gender"
+                      className="!w-full"
                     />
-                  </TextField.Slot>
-                  {errors.email && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </TextField.Root>
+                    <Select.Content>
+                      <Select.Item value="male">Male</Select.Item>
+                      <Select.Item value="female">Female</Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                )}
+              />
+              {errors.gender && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.gender.message}
+                </p>
               )}
-            />
+            </div>
 
-            <Controller
-              name="gender"
-              control={control}
-              render={({ field }) => (
-                <Select.Root value={field.value} onValueChange={field.onChange}>
-                  <Select.Trigger placeholder="Gender" />
-                  <Select.Content>
-                    <Select.Item value="male">Male</Select.Item>
-                    <Select.Item value="female">Female</Select.Item>
-                  </Select.Content>
-                  {errors.gender && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.gender.message}
-                    </p>
-                  )}
-                </Select.Root>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Section
+              </label>
+              <Controller
+                name="section"
+                control={control}
+                render={({ field }) => (
+                  <Select.Root
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <Select.Trigger
+                      placeholder="Select section"
+                      className="!w-full"
+                    />
+                    <Select.Content>
+                      <Select.Item value={section?.name || ""}>
+                        {section?.name || ""}
+                      </Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                )}
+              />
+              {errors.section && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.section.message}
+                </p>
               )}
-            />
+            </div>
 
-            <Controller
-              name="section"
-              control={control}
-              render={({ field }) => (
-                <Select.Root value={field.value} onValueChange={field.onChange}>
-                  <Select.Trigger placeholder="Select Section" />
-                  <Select.Content>
-                    <Select.Item value={section?.name || ""}>
-                      {section?.name || ""}
-                    </Select.Item>
-                  </Select.Content>
-                  {errors.section && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.section.message}
-                    </p>
-                  )}
-                </Select.Root>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Contact Number
+              </label>
+              <Controller
+                name="contact"
+                control={control}
+                render={({ field }) => (
+                  <TextField.Root
+                    type="text"
+                    placeholder="Enter contact number"
+                    {...field}
+                  />
+                )}
+              />
+              {errors.contact && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.contact.message}
+                </p>
               )}
-            />
+            </div>
 
-            <Controller
-              name="contact"
-              control={control}
-              render={({ field }) => (
-                <TextField.Root>
-                  <TextField.Slot>
-                    <input placeholder="Contact Number" {...field} />
-                  </TextField.Slot>
-                  {errors.contact && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.contact.message}
-                    </p>
-                  )}
-                </TextField.Root>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Guardian Name
+              </label>
+              <Controller
+                name="guardian_name"
+                control={control}
+                render={({ field }) => (
+                  <TextField.Root
+                    type="text"
+                    placeholder="Enter guardian name"
+                    {...field}
+                  />
+                )}
+              />
+              {errors.guardian_name && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.guardian_name.message}
+                </p>
               )}
-            />
+            </div>
 
-            <Controller
-              name="guardian_name"
-              control={control}
-              render={({ field }) => (
-                <TextField.Root>
-                  <TextField.Slot>
-                    <input placeholder="Guardian Name" {...field} />
-                  </TextField.Slot>
-                  {errors.guardian_name && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.guardian_name.message}
-                    </p>
-                  )}
-                </TextField.Root>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Guardian Relation
+              </label>
+              <Controller
+                name="guardian_relation"
+                control={control}
+                render={({ field }) => (
+                  <Select.Root
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <Select.Trigger
+                      placeholder="Select relation"
+                      className="!w-full"
+                    />
+                    <Select.Content>
+                      <Select.Item value="parent">Parent</Select.Item>
+                      <Select.Item value="sibling">Sibling</Select.Item>
+                      <Select.Item value="grandparent">Grandparent</Select.Item>
+                      <Select.Item value="aunt_uncle">Aunt/Uncle</Select.Item>
+                      <Select.Item value="other">Other</Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                )}
+              />
+              {errors.guardian_relation && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.guardian_relation.message}
+                </p>
               )}
-            />
+            </div>
 
-            <Controller
-              name="guardian_contact"
-              control={control}
-              render={({ field }) => (
-                <TextField.Root>
-                  <TextField.Slot>
-                    <input placeholder="Guardian Contact Number" {...field} />
-                  </TextField.Slot>
-                  {errors.guardian_contact && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.guardian_contact.message}
-                    </p>
-                  )}
-                </TextField.Root>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Guardian Contact Number
+              </label>
+              <Controller
+                name="guardian_mobile_number"
+                control={control}
+                render={({ field }) => (
+                  <TextField.Root
+                    type="text"
+                    placeholder="Enter guardian contact number"
+                    {...field}
+                  />
+                )}
+              />
+              {errors.guardian_mobile_number && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.guardian_mobile_number.message}
+                </p>
               )}
-            />
+            </div>
           </Flex>
-          <Flex gap="3" mt="4" justify="end">
+          <Flex gap="3" mt="6" justify="end">
             <Dialog.Close>
               <Button variant="soft" color="gray">
                 Cancel
               </Button>
             </Dialog.Close>
-            <Button type="submit" color="blue">
-              {submitButtonText}
+            <Button type="submit" color="blue" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : submitButtonText}
             </Button>
           </Flex>
         </form>

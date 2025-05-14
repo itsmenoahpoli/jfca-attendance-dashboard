@@ -11,7 +11,7 @@ export const DashboardContent: React.FC<Props> = (props) => {
     <div
       className={`${
         sidebarCollapsed ? "ml-[70px]" : "ml-[260px]"
-      } transition-all duration-200 h-full w-full`}
+      } transition-all duration-200 h-full w-full !bg-slate-100`}
     >
       <ContentNavbar />
       <div className="p-2">{props.children}</div>

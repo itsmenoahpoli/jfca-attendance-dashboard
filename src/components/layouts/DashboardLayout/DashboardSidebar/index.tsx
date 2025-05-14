@@ -28,7 +28,7 @@ export const DashboardSidebar: React.FC<{ items: SidebarGroup[] }> = (
     >
       <div className="h-full w-full relative">
         <div
-          className={`${sidebarWidthClass} bg-slate-200 mx-auto py-1 flex justify-center items-center`}
+          className={`${sidebarWidthClass} mx-auto py-1 flex justify-center items-center`}
         >
           <AppLogo
             type={logoAttrs.type}
