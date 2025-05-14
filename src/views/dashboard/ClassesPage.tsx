@@ -145,8 +145,16 @@ const AddClassDialog: React.FC<{
         school_year: initialData.school_year,
         is_enabled: initialData.is_enabled,
       });
+    } else {
+      // Reset form data when adding new section
+      setFormData({
+        name: "",
+        level: "",
+        school_year: "",
+        is_enabled: true,
+      });
     }
-  }, [initialData]);
+  }, [initialData, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,6 +175,11 @@ const AddClassDialog: React.FC<{
         <Dialog.Title>
           {initialData ? "Edit Class/Section" : "Add New Class/Section"}
         </Dialog.Title>
+        <Dialog.Description className="text-gray-500 mb-4">
+          {initialData
+            ? "Update the details of this class/section."
+            : "Fill in the details to create a new class/section."}
+        </Dialog.Description>
         <form onSubmit={handleSubmit}>
           <Flex direction="column" gap="3" className="mt-4">
             <TextField.Root
@@ -350,6 +363,9 @@ const StudentsListDialog: React.FC<{
           <Users2 className="w-5 h-5" />
           Students List - {sectionName}
         </Dialog.Title>
+        <Dialog.Description className="text-gray-500 mb-4">
+          View and manage students in this section.
+        </Dialog.Description>
         <div className="mt-4">
           <div className="min-h-[400px] flex items-center justify-center">
             <div className="text-center">

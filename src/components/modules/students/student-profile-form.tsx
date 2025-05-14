@@ -100,27 +100,39 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
     }
   };
 
+  const resetForm = () => {
+    setValue("name", "");
+    setValue("email", "");
+    setValue("gender", "");
+    setValue("contact", "");
+    setValue("guardian_name", "");
+    setValue("guardian_contact", "");
+    setValue("section", section?.name || "");
+  };
+
   const onFormSubmit = (data: StudentProfileFormData) => {
     onSubmit(data);
     if (!initialData) {
-      setValue("name", "");
-      setValue("email", "");
-      setValue("gender", "");
-      setValue("contact", "");
-      setValue("guardian_name", "");
-      setValue("guardian_contact", "");
-      setValue("section", section?.name || "");
-      setValue("leftSideImage", "");
-      setValue("frontSideImage", "");
-      setValue("rightSideImage", "");
-      setCurrentCapture("front");
+      resetForm();
     }
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(open) => {
+        if (!open) {
+          resetForm();
+        }
+        onOpenChange(open);
+      }}
+    >
       <Dialog.Content className="max-w-md">
         <Dialog.Title>{title}</Dialog.Title>
+        <Dialog.Description>
+          Fill in the student's information and capture their photos from
+          different angles.
+        </Dialog.Description>
         <form onSubmit={handleSubmit(onFormSubmit)}>
           <Flex direction="column" gap="3" className="mt-4">
             <div className="mb-4">
