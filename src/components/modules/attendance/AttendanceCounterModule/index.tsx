@@ -4,6 +4,10 @@ import { Flex, Select, Button } from "@radix-ui/themes";
 import { WebcamScanFeed } from "./WebcamScanFeed";
 import { QrScanFeed } from "./QrScanFeed";
 
+interface AttendanceCounterModuleProps {
+  isWebcamEnabled: boolean;
+}
+
 const feedOptions = [
   {
     label: "Webcam Feed (Face Recognition)",
@@ -35,7 +39,9 @@ const FullScreenLoader = () => {
   );
 };
 
-export const AttendanceCounterModule: React.FC = () => {
+export const AttendanceCounterModule: React.FC<
+  AttendanceCounterModuleProps
+> = ({ isWebcamEnabled }) => {
   const [selectedFeed, setSelectedFeed] = React.useState<string>("webcam-feed");
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -82,7 +88,11 @@ export const AttendanceCounterModule: React.FC = () => {
             </Select.Root>
           </Flex>
 
-          {selectedFeed === "webcam-feed" ? <WebcamScanFeed /> : <QrScanFeed />}
+          {selectedFeed === "webcam-feed" ? (
+            <WebcamScanFeed isEnabled={isWebcamEnabled} />
+          ) : (
+            <QrScanFeed isEnabled={isWebcamEnabled} />
+          )}
         </div>
         <div className="w-full border-l border-gray-300 pl-10">
           <NoStudentDetectedBanner />
