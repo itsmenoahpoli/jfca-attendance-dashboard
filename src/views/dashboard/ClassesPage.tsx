@@ -360,6 +360,12 @@ export const ClassesPage: React.FC = () => {
     queryFn: sectionsService.getSections,
   });
 
+  const { data: selectedSectionWithStudents } = useQuery({
+    queryKey: ["section", selectedSection?.id],
+    queryFn: () => sectionsService.getSection(selectedSection!.id),
+    enabled: !!selectedSection && studentsListOpen,
+  });
+
   const createMutation = useMutation({
     mutationFn: sectionsService.createSection,
     onSuccess: () => {
@@ -530,7 +536,7 @@ export const ClassesPage: React.FC = () => {
           }
         }}
         sectionName={selectedSection?.name || ""}
-        section={selectedSection}
+        section={selectedSectionWithStudents}
       />
     </div>
   );

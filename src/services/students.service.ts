@@ -166,11 +166,21 @@ export const useStudentsService = () => {
     await $baseApi.delete(`/students/${id}`);
   };
 
+  const importStudents = async (formData: FormData): Promise<void> => {
+    await $baseApi.post("/students/import", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Accept: "application/json",
+      },
+    });
+  };
+
   return {
     getStudents,
     getStudent,
     createStudent,
     updateStudent,
     deleteStudent,
+    importStudents,
   };
 };

@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Dialog, Flex, Avatar } from "@radix-ui/themes";
-import { PenSquare, Plus, Trash2, Users2, QrCode } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PenSquare, Plus, Trash2, Users2, QrCode, Upload } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { type Section } from "@/services/sections.service";
 import {
@@ -15,6 +15,7 @@ import {
 } from "./student-profile-form";
 import { DeleteConfirmationDialog } from "../common/delete-confirmation-dialog";
 import { StudentQRDialog } from "./student-qr-dialog";
+import { StudentExcelImportDialog } from "./student-excel-import-dialog";
 
 interface StudentsListDialogProps {
   open: boolean;
@@ -33,25 +34,20 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
   const [selectedStudent, setSelectedStudent] = React.useState<
     Student | undefined
   >();
+  const [selectedStudents, setSelectedStudents] = React.useState<Set<string>>(
+    new Set()
+  );
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [qrDialogOpen, setQrDialogOpen] = React.useState(false);
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
   const queryClient = useQueryClient();
   const studentsService = useStudentsService();
-
-  const { data: students = [], isLoading } = useQuery({
-    queryKey: ["students", section?.id],
-    queryFn: () => {
-      if (!section) throw new Error("Section is required");
-      return studentsService.getStudents(section.id);
-    },
-    enabled: open && !!section,
-  });
 
   const createMutation = useMutation({
     mutationFn: studentsService.createStudent,
     onSuccess: () => {
       if (section) {
-        queryClient.invalidateQueries({ queryKey: ["students", section.id] });
+        queryClient.invalidateQueries({ queryKey: ["sections"] });
       }
       setAddStudentDialogOpen(false);
       toast.success("Student added successfully");
@@ -71,7 +67,7 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
     }) => studentsService.updateStudent(id, data),
     onSuccess: () => {
       if (section) {
-        queryClient.invalidateQueries({ queryKey: ["students", section.id] });
+        queryClient.invalidateQueries({ queryKey: ["sections"] });
       }
       setAddStudentDialogOpen(false);
       setSelectedStudent(undefined);
@@ -86,10 +82,11 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
     mutationFn: studentsService.deleteStudent,
     onSuccess: () => {
       if (section) {
-        queryClient.invalidateQueries({ queryKey: ["students", section.id] });
+        queryClient.invalidateQueries({ queryKey: ["sections"] });
       }
       setDeleteDialogOpen(false);
       setSelectedStudent(undefined);
+      setSelectedStudents(new Set());
       toast.success("Student deleted successfully");
     },
     onError: () => {
@@ -127,9 +124,43 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
     }
   };
 
+  const handleBatchDelete = () => {
+    if (selectedStudents.size === 0) return;
+
+    const deletePromises = Array.from(selectedStudents).map((studentId) =>
+      studentsService.deleteStudent(studentId)
+    );
+
+    Promise.all(deletePromises)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["sections"] });
+        setSelectedStudents(new Set());
+        toast.success(
+          `Successfully deleted ${selectedStudents.size} student${
+            selectedStudents.size > 1 ? "s" : ""
+          }`
+        );
+      })
+      .catch(() => {
+        toast.error("Failed to delete some students");
+      });
+  };
+
+  const toggleStudentSelection = (studentId: string) => {
+    const newSelected = new Set(selectedStudents);
+    if (newSelected.has(studentId)) {
+      newSelected.delete(studentId);
+    } else {
+      newSelected.add(studentId);
+    }
+    setSelectedStudents(newSelected);
+  };
+
   if (!section) {
     return null;
   }
+
+  const students = section.students || [];
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -142,8 +173,7 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
           View and manage students in this section.
         </Dialog.Description>
         <div className="mt-4">
-          {isLoading ||
-          createMutation.isPending ||
+          {createMutation.isPending ||
           updateMutation.isPending ||
           deleteMutation.isPending ? (
             <div className="min-h-[400px] flex items-center justify-center">
@@ -163,6 +193,49 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
                   <p className="text-gray-500 mb-4">
                     This section doesn't have any students yet.
                   </p>
+                  <Flex gap="2" justify="center">
+                    <Button
+                      color="blue"
+                      onClick={() => setAddStudentDialogOpen(true)}
+                      className="inline-flex items-center gap-2"
+                    >
+                      <Plus size={16} />
+                      Add Student
+                    </Button>
+                    <Button
+                      color="green"
+                      onClick={() => setImportDialogOpen(true)}
+                      className="inline-flex items-center gap-2"
+                    >
+                      <Upload size={16} />
+                      Batch Import
+                    </Button>
+                  </Flex>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                {selectedStudents.size > 0 && (
+                  <Button
+                    color="red"
+                    onClick={handleBatchDelete}
+                    className="inline-flex items-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    Delete Selected ({selectedStudents.size})
+                  </Button>
+                )}
+                <Flex gap="2">
+                  <Button
+                    color="green"
+                    onClick={() => setImportDialogOpen(true)}
+                    className="inline-flex items-center gap-2"
+                  >
+                    <Upload size={16} />
+                    Batch Import
+                  </Button>
                   <Button
                     color="blue"
                     onClick={() => setAddStudentDialogOpen(true)}
@@ -171,25 +244,28 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
                     <Plus size={16} />
                     Add Student
                   </Button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex justify-end">
-                <Button
-                  color="blue"
-                  onClick={() => setAddStudentDialogOpen(true)}
-                  className="inline-flex items-center gap-2"
-                >
-                  <Plus size={16} />
-                  Add Student
-                </Button>
+                </Flex>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full bg-white rounded-lg">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300"
+                          checked={selectedStudents.size === students.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedStudents(
+                                new Set(students.map((s) => s.id))
+                              );
+                            } else {
+                              setSelectedStudents(new Set());
+                            }
+                          }}
+                        />
+                      </th>
                       {["Image", "Name", "Email", "Contact", "Actions"].map(
                         (header) => (
                           <th
@@ -205,6 +281,14 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
                   <tbody className="divide-y divide-gray-200">
                     {students.map((student) => (
                       <tr key={student.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            className="rounded border-gray-300"
+                            checked={selectedStudents.has(student.id)}
+                            onChange={() => toggleStudentSelection(student.id)}
+                          />
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {student.images?.facefront ? (
                             <img
@@ -316,6 +400,12 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
           }
         }}
         student={selectedStudent}
+      />
+
+      <StudentExcelImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        sectionId={section?.id || ""}
       />
     </Dialog.Root>
   );

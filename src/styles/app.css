@@ -23,3 +23,11 @@
 .rt-Button {
   @apply !h-[40px] cursor-pointer;
 }
+
+.Toastify__toast-container {
+  z-index: 999999 !important;
+}
+
+.Toastify__toast {
+  z-index: 999999 !important;
+}

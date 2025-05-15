@@ -1,5 +1,6 @@
 import { useApi } from "@/hooks";
 import { API_ROUTES } from "@/constants";
+import { type Student } from "./students.service";
 
 export type Section = {
   id: string;
@@ -7,6 +8,7 @@ export type Section = {
   level: string;
   school_year: string;
   is_enabled: boolean;
+  students?: Student[];
 };
 
 export const useSectionsService = () => {
