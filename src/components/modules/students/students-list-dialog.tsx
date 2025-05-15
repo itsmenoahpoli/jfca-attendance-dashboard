@@ -134,6 +134,7 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
     Promise.all(deletePromises)
       .then(() => {
         queryClient.invalidateQueries({ queryKey: ["sections"] });
+        queryClient.refetchQueries({ queryKey: ["sections"] });
         setSelectedStudents(new Set());
         toast.success(
           `Successfully deleted ${selectedStudents.size} student${
