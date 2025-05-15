@@ -25,7 +25,7 @@ export const useApi = () => {
          * Set Headers
          */
         config.headers["Accept"] = "application/json";
-        config.headers["Content-Type"] = "application/json";
+        // config.headers["Content-Type"] = "application/json";
 
         if (authToken) {
           config.headers["Authorization"] = getBearerTokenValue();

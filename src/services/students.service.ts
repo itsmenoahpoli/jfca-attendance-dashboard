@@ -9,9 +9,11 @@ export interface Student {
   guardian_name: string;
   guardian_contact: string;
   section_id: string;
-  leftSideImage?: string;
-  frontSideImage?: string;
-  rightSideImage?: string;
+  images?: {
+    facefront: string;
+    faceleft: string;
+    faceright: string;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -22,14 +24,13 @@ export interface CreateStudentData {
   gender: string;
   contact: string;
   guardian_name: string;
+  guardian_relation: string;
   guardian_mobile_number: string;
   section_id: string;
   leftSideImage?: string;
   frontSideImage?: string;
   rightSideImage?: string;
 }
-
-export interface UpdateStudentData extends Partial<CreateStudentData> {}
 
 export const useStudentsService = () => {
   const { $baseApi } = useApi();
@@ -45,15 +46,119 @@ export const useStudentsService = () => {
   };
 
   const createStudent = async (data: CreateStudentData): Promise<Student> => {
-    const response = await $baseApi.post("/students", data);
+    const formData = new FormData();
+
+    formData.append("name", data.name);
+    formData.append("email", data.email);
+    formData.append("gender", data.gender);
+    formData.append("contact", data.contact);
+    formData.append("guardian_name", data.guardian_name);
+    formData.append("guardian_relation", data.guardian_relation);
+    formData.append("guardian_mobile_number", data.guardian_mobile_number);
+    formData.append("section_id", data.section_id);
+    formData.append("is_enabled", "true");
+
+    const imagePromises = [];
+
+    if (data.leftSideImage) {
+      imagePromises.push(
+        fetch(data.leftSideImage)
+          .then((r) => r.blob())
+          .then((blob) => {
+            formData.append("photo1", blob, "photo1.jpg");
+          })
+      );
+    }
+
+    if (data.frontSideImage) {
+      imagePromises.push(
+        fetch(data.frontSideImage)
+          .then((r) => r.blob())
+          .then((blob) => {
+            formData.append("photo2", blob, "photo2.jpg");
+          })
+      );
+    }
+
+    if (data.rightSideImage) {
+      imagePromises.push(
+        fetch(data.rightSideImage)
+          .then((r) => r.blob())
+          .then((blob) => {
+            formData.append("photo3", blob, "photo3.jpg");
+          })
+      );
+    }
+
+    await Promise.all(imagePromises);
+
+    const response = await $baseApi.post("/students", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Accept: "application/json",
+      },
+    });
     return response.data;
   };
 
   const updateStudent = async (
     id: string,
-    data: UpdateStudentData
+    data: Partial<CreateStudentData>
   ): Promise<Student> => {
-    const response = await $baseApi.put(`/students/${id}`, data);
+    const formData = new FormData();
+
+    if (data.name) formData.append("name", data.name);
+    if (data.email) formData.append("email", data.email);
+    if (data.gender) formData.append("gender", data.gender);
+    if (data.contact) formData.append("contact", data.contact);
+    if (data.guardian_name)
+      formData.append("guardian_name", data.guardian_name);
+    if (data.guardian_relation)
+      formData.append("guardian_relation", data.guardian_relation);
+    if (data.guardian_mobile_number)
+      formData.append("guardian_mobile_number", data.guardian_mobile_number);
+    if (data.section_id) formData.append("section_id", data.section_id);
+
+    const imagePromises = [];
+
+    if (data.leftSideImage) {
+      imagePromises.push(
+        fetch(data.leftSideImage)
+          .then((r) => r.blob())
+          .then((blob) => {
+            formData.append("photo1", blob, "photo1.jpg");
+          })
+      );
+    }
+
+    if (data.frontSideImage) {
+      imagePromises.push(
+        fetch(data.frontSideImage)
+          .then((r) => r.blob())
+          .then((blob) => {
+            formData.append("photo2", blob, "photo2.jpg");
+          })
+      );
+    }
+
+    if (data.rightSideImage) {
+      imagePromises.push(
+        fetch(data.rightSideImage)
+          .then((r) => r.blob())
+          .then((blob) => {
+            formData.append("photo3", blob, "photo3.jpg");
+          })
+      );
+    }
+
+    await Promise.all(imagePromises);
+
+    const response = await $baseApi.patch(`/students/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Accept: "application/json",
+      },
+    });
     return response.data;
   };
 

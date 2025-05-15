@@ -1,13 +1,13 @@
 import React from "react";
-import { Button, Dialog, Flex } from "@radix-ui/themes";
-import { PenSquare, Plus, Trash2, Users2, QrCode, Printer } from "lucide-react";
+import { Button, Dialog, Flex, Avatar } from "@radix-ui/themes";
+import { PenSquare, Plus, Trash2, Users2, QrCode } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { type Section } from "@/services/sections.service";
 import {
   useStudentsService,
   type Student,
-  type UpdateStudentData,
+  type CreateStudentData,
 } from "@/services/students.service";
 import {
   StudentProfileForm,
@@ -62,8 +62,13 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateStudentData }) =>
-      studentsService.updateStudent(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<CreateStudentData>;
+    }) => studentsService.updateStudent(id, data),
     onSuccess: () => {
       if (section) {
         queryClient.invalidateQueries({ queryKey: ["students", section.id] });
@@ -122,79 +127,13 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
     }
   };
 
-  const handlePrintQR = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow || !selectedStudent) return;
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Student QR Code - ${selectedStudent.name}</title>
-          <style>
-            body {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              height: 100vh;
-              margin: 0;
-              font-family: Arial, sans-serif;
-            }
-            .qr-container {
-              text-align: center;
-            }
-            .student-info {
-              margin-top: 20px;
-              text-align: center;
-            }
-            .student-name {
-              font-size: 18px;
-              font-weight: 500;
-              color: #333;
-              margin-bottom: 8px;
-            }
-            .student-id {
-              font-size: 14px;
-              color: #666;
-            }
-            @media print {
-              body {
-                padding: 20px;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="qr-container">
-            <img src="${
-              document.querySelector(".qr-code svg")?.outerHTML
-            }" width="200" height="200" />
-            <div class="student-info">
-              <div class="student-name">${selectedStudent.name}</div>
-              <div class="student-id">${selectedStudent.id}</div>
-            </div>
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-              window.onafterprint = function() {
-                window.close();
-              };
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
   if (!section) {
     return null;
   }
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content className="max-w-4xl">
+      <Dialog.Content className="!w-[90vw] !max-w-[90vw]">
         <Dialog.Title className="flex items-center gap-2">
           <Users2 className="w-5 h-5" />
           Students List - {sectionName}
@@ -251,19 +190,36 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
                 <table className="min-w-full bg-white rounded-lg">
                   <thead className="bg-gray-50">
                     <tr>
-                      {["Name", "Email", "Contact", "Actions"].map((header) => (
-                        <th
-                          key={header}
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          {header}
-                        </th>
-                      ))}
+                      {["Image", "Name", "Email", "Contact", "Actions"].map(
+                        (header) => (
+                          <th
+                            key={header}
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            {header}
+                          </th>
+                        )
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {students.map((student) => (
                       <tr key={student.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {student.images?.facefront ? (
+                            <img
+                              src={student.images.facefront}
+                              alt={student.name}
+                              className="w-16 h-16 rounded-full object-cover"
+                            />
+                          ) : (
+                            <Avatar
+                              fallback={student.name.charAt(0).toUpperCase()}
+                              size="5"
+                              radius="full"
+                            />
+                          )}
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {student.name}
                         </td>

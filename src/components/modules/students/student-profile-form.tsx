@@ -5,7 +5,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { type Section } from "@/services/sections.service";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Webcam as WebcamIcon } from "lucide-react";
+import { type Student } from "@/services/students.service";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -27,7 +28,7 @@ type StudentProfileFormProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: StudentProfileFormData) => void;
-  initialData?: Partial<StudentProfileFormData>;
+  initialData?: Partial<Student>;
   title?: string;
   submitButtonText?: string;
   section?: Section;
@@ -60,22 +61,54 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
     control,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<StudentProfileFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      ...initStudentState,
-      ...initialData,
-      section: section?.name || initialData?.section || "",
-    },
+    defaultValues: initStudentState,
     mode: "onChange",
   });
 
   React.useEffect(() => {
-    if (section?.name) {
-      setValue("section", section.name);
+    if (initialData) {
+      setValue("name", initialData.name || "");
+      setValue("email", initialData.email || "");
+      setValue("gender", initialData.gender || "");
+      setValue("contact", initialData.contact || "");
+      setValue("guardian_name", initialData.guardian_name || "");
+      setValue("guardian_relation", "parent");
+      setValue("guardian_mobile_number", initialData.guardian_contact || "");
+      setValue("section", section?.name || "");
+
+      if (
+        initialData.images?.facefront ||
+        initialData.images?.faceleft ||
+        initialData.images?.faceright
+      ) {
+        setValue("leftSideImage", initialData.images.faceleft || "");
+        setValue("frontSideImage", initialData.images.facefront || "");
+        setValue("rightSideImage", initialData.images.faceright || "");
+        setShowWebcam(false);
+      } else {
+        setValue("leftSideImage", "");
+        setValue("frontSideImage", "");
+        setValue("rightSideImage", "");
+        setShowWebcam(true);
+        setCurrentCapture("front");
+      }
     }
-  }, [section, setValue]);
+  }, [initialData, section, setValue]);
+
+  const leftSideImage = watch("leftSideImage");
+  const frontSideImage = watch("frontSideImage");
+  const rightSideImage = watch("rightSideImage");
+  const [showWebcam, setShowWebcam] = React.useState(true);
+
+  React.useEffect(() => {
+    if (leftSideImage && frontSideImage && rightSideImage) {
+      setShowWebcam(false);
+    }
+  }, [leftSideImage, frontSideImage, rightSideImage]);
 
   const webcamRef = React.useRef<Webcam>(null);
   const [currentCapture, setCurrentCapture] = React.useState<
@@ -94,10 +127,12 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
       const imageSrc = webcamRef.current.getScreenshot();
       if (imageSrc) {
         setValue(`${currentCapture}SideImage`, imageSrc);
-        if (currentCapture === "left") {
-          setCurrentCapture("front");
-        } else if (currentCapture === "front") {
+        if (currentCapture === "front") {
           setCurrentCapture("right");
+        } else if (currentCapture === "right") {
+          setCurrentCapture("left");
+        } else if (currentCapture === "left") {
+          setShowWebcam(false);
         }
       }
     }
@@ -112,11 +147,15 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
     setValue("guardian_relation", "");
     setValue("guardian_mobile_number", "");
     setValue("section", section?.name || "");
+    setValue("leftSideImage", "");
+    setValue("frontSideImage", "");
+    setValue("rightSideImage", "");
+    setCurrentCapture("front");
+    setShowWebcam(true);
   };
 
   const onFormSubmit = (data: StudentProfileFormData) => {
-    // @ts-ignore
-    onSubmit({ ...data, is_enabled: true });
+    onSubmit(data);
     if (!initialData) {
       resetForm();
     }
@@ -160,6 +199,7 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
                         setValue("frontSideImage", "");
                         setValue("rightSideImage", "");
                         setCurrentCapture("front");
+                        setShowWebcam(true);
                       }}
                       variant="soft"
                       color="gray"
@@ -168,23 +208,85 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
                       Reset Photos
                     </Button>
                   </div>
-                  <Webcam
-                    ref={webcamRef}
-                    screenshotFormat="image/jpeg"
-                    className="w-full rounded-lg"
-                    onUserMediaError={handleWebcamError}
-                  />
-                  <Flex justify="center" mt="2">
-                    <Button
-                      onClick={captureImage}
-                      type="button"
-                      disabled={!!webcamError}
-                    >
-                      Capture{" "}
-                      {currentCapture.charAt(0).toUpperCase() +
-                        currentCapture.slice(1)}{" "}
-                      Side
-                    </Button>
+                  {showWebcam ? (
+                    <>
+                      <Webcam
+                        ref={webcamRef}
+                        screenshotFormat="image/jpeg"
+                        className="w-full rounded-lg"
+                        onUserMediaError={handleWebcamError}
+                      />
+                      <Flex justify="center" mt="2">
+                        <Button
+                          onClick={captureImage}
+                          type="button"
+                          disabled={!!webcamError}
+                        >
+                          Capture{" "}
+                          {currentCapture.charAt(0).toUpperCase() +
+                            currentCapture.slice(1)}{" "}
+                          Side
+                        </Button>
+                      </Flex>
+                    </>
+                  ) : (
+                    <Flex justify="center" mt="2" mb="4">
+                      <Button
+                        onClick={() => setShowWebcam(true)}
+                        type="button"
+                        color="blue"
+                      >
+                        <WebcamIcon className="w-4 h-4 mr-2" />
+                        Open Camera
+                      </Button>
+                    </Flex>
+                  )}
+                  <Flex gap="1" mt="2" justify="center">
+                    <div className="relative w-16 h-16 border border-gray-200 rounded overflow-hidden">
+                      {leftSideImage ? (
+                        <img
+                          src={leftSideImage}
+                          alt="Left side"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                          <span className="text-[10px] text-gray-400">
+                            Left
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="relative w-16 h-16 border border-gray-200 rounded overflow-hidden">
+                      {frontSideImage ? (
+                        <img
+                          src={frontSideImage}
+                          alt="Front side"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                          <span className="text-[10px] text-gray-400">
+                            Front
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="relative w-16 h-16 border border-gray-200 rounded overflow-hidden">
+                      {rightSideImage ? (
+                        <img
+                          src={rightSideImage}
+                          alt="Right side"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+                          <span className="text-[10px] text-gray-400">
+                            Right
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </Flex>
                 </>
               )}

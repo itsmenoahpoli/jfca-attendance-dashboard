@@ -85,7 +85,7 @@ export const StudentQRDialog: React.FC<StudentQRDialogProps> = ({
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content className="max-w-sm">
+      <Dialog.Content className="w-[85%] max-w-[90%]">
         <Dialog.Title className="flex items-center gap-2">
           <QrCode className="w-5 h-5" />
           Student QR Code
