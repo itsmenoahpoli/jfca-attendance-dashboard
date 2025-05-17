@@ -4,6 +4,7 @@ import { Flex, Select, Button } from "@radix-ui/themes";
 import { WebcamScanFeed } from "./WebcamScanFeed";
 import { QrScanFeed } from "./QrScanFeed";
 import { type Student } from "@/services/students.service";
+import { RotateCcw } from "lucide-react";
 
 interface AttendanceCounterModuleProps {
   isWebcamEnabled: boolean;
@@ -20,12 +21,26 @@ const feedOptions = [
   },
 ];
 
-const StudentDataBanner: React.FC<{ student: Student | null }> = ({
-  student,
-}) => {
+const StudentDataBanner: React.FC<{
+  student: Student | null;
+  onReset: () => void;
+}> = ({ student, onReset }) => {
   return (
     <Flex className="h-full" direction="column">
-      <h1 className="text-2xl font-bold">STUDENT DATA</h1>
+      <Flex justify="between" align="center">
+        <h1 className="text-2xl font-bold">STUDENT DATA</h1>
+        {student && (
+          <Button
+            variant="outline"
+            color="red"
+            onClick={onReset}
+            className="!text-red-500 !bg-red-50 hover:!bg-red-100"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Reset and re-scan
+          </Button>
+        )}
+      </Flex>
       {student ? (
         <div className="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <Flex direction="column" gap="6">
@@ -34,48 +49,57 @@ const StudentDataBanner: React.FC<{ student: Student | null }> = ({
                 <img
                   src={student.images.facefront}
                   alt={student.name}
-                  className="w-32 h-32 rounded-full object-cover"
+                  className="w-48 h-48 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-4xl text-gray-500">
+                <div className="w-48 h-48 rounded-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-6xl text-gray-500">
                     {student.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
             </Flex>
 
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500">Name</p>
-                <p className="font-medium text-lg">{student.name}</p>
+            <Flex gap="8">
+              <div className="flex-1 space-y-4">
+                <p className="text-sm font-medium text-gray-700 mb-3">
+                  Student Information
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Name</p>
+                    <p className="font-medium text-lg">{student.name}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Student ID</p>
+                    <p className="font-medium">{student.id}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Email</p>
+                    <p className="font-medium">{student.email}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Contact</p>
+                    <p className="font-medium">{student.contact || "-"}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Section</p>
+                    <p className="font-medium">
+                      {student.section?.name || "-"}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <p className="text-sm text-gray-500">Student ID</p>
-                <p className="font-medium">{student.id}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p className="font-medium">{student.email}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">Contact</p>
-                <p className="font-medium">{student.contact || "-"}</p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">Section</p>
-                <p className="font-medium">{student.section?.name || "-"}</p>
-              </div>
-
-              <div className="pt-4 border-t border-gray-100">
+              <div className="flex-1 space-y-4">
                 <p className="text-sm font-medium text-gray-700 mb-3">
                   Guardian Information
                 </p>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-500">Name</p>
                     <p className="font-medium">
@@ -91,7 +115,7 @@ const StudentDataBanner: React.FC<{ student: Student | null }> = ({
                   </div>
                 </div>
               </div>
-            </div>
+            </Flex>
           </Flex>
         </div>
       ) : (
@@ -137,6 +161,10 @@ export const AttendanceCounterModule: React.FC<
     setScannedStudent(student);
   };
 
+  const handleResetScanned = () => {
+    setScannedStudent(null);
+  };
+
   if (isLoading) {
     return <FullScreenLoader />;
   }
@@ -178,7 +206,10 @@ export const AttendanceCounterModule: React.FC<
           )}
         </div>
         <div className="w-full border-l border-gray-300 pl-10">
-          <StudentDataBanner student={scannedStudent} />
+          <StudentDataBanner
+            student={scannedStudent}
+            onReset={handleResetScanned}
+          />
         </div>
       </Flex>
     </div>

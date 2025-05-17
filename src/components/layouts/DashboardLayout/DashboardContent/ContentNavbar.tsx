@@ -1,9 +1,10 @@
 import React from "react";
-import { Avatar, Flex, DropdownMenu } from "@radix-ui/themes";
-import { ArrowLeftFromLine, ArrowRightFromLine } from "lucide-react";
+import { Avatar, Flex, DropdownMenu, Button } from "@radix-ui/themes";
+import { ArrowLeftFromLine, ArrowRightFromLine, QrCode } from "lucide-react";
 import { useLayout, useAuth } from "@/hooks";
 import { AppSignoutButton } from "@/components";
 import { FORMATTERS } from "@/utils";
+import { WEB_ROUTES } from "@/constants";
 
 const ICON_SIZE: number = 16;
 
@@ -63,9 +64,22 @@ export const ContentNavbar: React.FC = () => {
       align="center"
       justify="between"
     >
-      <div>
+      <Flex gap="4">
         <CollapseSidebarTrigger />
-      </div>
+        <a
+          href={WEB_ROUTES.MODULE_ATTENDANCE}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Button
+            variant="soft"
+            className="!border-2 !border-blue-500 hover:!bg-blue-50"
+          >
+            <QrCode size={ICON_SIZE} className="mr-2" />
+            Attendance Module
+          </Button>
+        </a>
+      </Flex>
 
       <Flex direction="row" justify="end" gap="5">
         <MyAccountDropdown userName={userName ?? "ADMINISTRATOR"} />
