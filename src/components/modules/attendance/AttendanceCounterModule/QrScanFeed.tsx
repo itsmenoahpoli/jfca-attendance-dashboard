@@ -4,13 +4,17 @@ import { useStudentsService, type Student } from "@/services/students.service";
 
 interface QrScanFeedProps {
   isEnabled: boolean;
+  onStudentScanned: (student: Student | null) => void;
 }
 
 interface IDetectedBarcode {
   rawValue: string;
 }
 
-export const QrScanFeed: React.FC<QrScanFeedProps> = ({ isEnabled }) => {
+export const QrScanFeed: React.FC<QrScanFeedProps> = ({
+  isEnabled,
+  onStudentScanned,
+}) => {
   const [scannedValue, setScannedValue] = useState<string>("");
   const [student, setStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,9 +31,11 @@ export const QrScanFeed: React.FC<QrScanFeedProps> = ({ isEnabled }) => {
         setIsLoading(true);
         const studentData = await getStudent(studentId);
         setStudent(studentData);
+        onStudentScanned(studentData);
       } catch (error) {
         console.error("Error fetching student data:", error);
         setStudent(null);
+        onStudentScanned(null);
       } finally {
         setIsLoading(false);
       }

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Flex, Select, Button } from "@radix-ui/themes";
 import { WebcamScanFeed } from "./WebcamScanFeed";
 import { QrScanFeed } from "./QrScanFeed";
+import { type Student } from "@/services/students.service";
 
 interface AttendanceCounterModuleProps {
   isWebcamEnabled: boolean;
@@ -19,13 +20,85 @@ const feedOptions = [
   },
 ];
 
-const NoStudentDetectedBanner = () => {
+const StudentDataBanner: React.FC<{ student: Student | null }> = ({
+  student,
+}) => {
   return (
     <Flex className="h-full" direction="column">
       <h1 className="text-2xl font-bold">STUDENT DATA</h1>
-      <Flex justify="center" align="center" className="h-full">
-        <p>No data available</p>
-      </Flex>
+      {student ? (
+        <div className="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <Flex direction="column" gap="6">
+            <Flex justify="center">
+              {student.images?.facefront ? (
+                <img
+                  src={student.images.facefront}
+                  alt={student.name}
+                  className="w-32 h-32 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-4xl text-gray-500">
+                    {student.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </Flex>
+
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Name</p>
+                <p className="font-medium text-lg">{student.name}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Student ID</p>
+                <p className="font-medium">{student.id}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Email</p>
+                <p className="font-medium">{student.email}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Contact</p>
+                <p className="font-medium">{student.contact || "-"}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Section</p>
+                <p className="font-medium">{student.section?.name || "-"}</p>
+              </div>
+
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-sm font-medium text-gray-700 mb-3">
+                  Guardian Information
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-500">Name</p>
+                    <p className="font-medium">
+                      {student.guardian_name || "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Contact</p>
+                    <p className="font-medium">
+                      {student.guardian_mobile_number || "-"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Flex>
+        </div>
+      ) : (
+        <Flex justify="center" align="center" className="h-full">
+          <p>No data available</p>
+        </Flex>
+      )}
     </Flex>
   );
 };
@@ -44,6 +117,9 @@ export const AttendanceCounterModule: React.FC<
 > = ({ isWebcamEnabled }) => {
   const [selectedFeed, setSelectedFeed] = React.useState<string>("webcam-feed");
   const [isLoading, setIsLoading] = React.useState(true);
+  const [scannedStudent, setScannedStudent] = React.useState<Student | null>(
+    null
+  );
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -55,6 +131,10 @@ export const AttendanceCounterModule: React.FC<
 
   const handleFeedChange = (value: string) => {
     setSelectedFeed(value);
+  };
+
+  const handleStudentScanned = (student: Student | null) => {
+    setScannedStudent(student);
   };
 
   if (isLoading) {
@@ -91,11 +171,14 @@ export const AttendanceCounterModule: React.FC<
           {selectedFeed === "webcam-feed" ? (
             <WebcamScanFeed isEnabled={isWebcamEnabled} />
           ) : (
-            <QrScanFeed isEnabled={isWebcamEnabled} />
+            <QrScanFeed
+              isEnabled={isWebcamEnabled}
+              onStudentScanned={handleStudentScanned}
+            />
           )}
         </div>
         <div className="w-full border-l border-gray-300 pl-10">
-          <NoStudentDetectedBanner />
+          <StudentDataBanner student={scannedStudent} />
         </div>
       </Flex>
     </div>
