@@ -4,9 +4,10 @@ import Webcam from "react-webcam";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { type Section } from "@/services/sections.service";
+import { type Section, useSectionsService } from "@/services/sections.service";
 import { AlertTriangle, Webcam as WebcamIcon } from "lucide-react";
 import { type Student } from "@/services/students.service";
+import { useQuery } from "@tanstack/react-query";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -57,6 +58,12 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
   submitButtonText = "Add Student",
   section,
 }) => {
+  const sectionsService = useSectionsService();
+  const { data: sections = [] } = useQuery({
+    queryKey: ["sections"],
+    queryFn: sectionsService.getSections,
+  });
+
   const {
     control,
     handleSubmit,
@@ -146,12 +153,13 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
     setValue("guardian_name", "");
     setValue("guardian_relation", "");
     setValue("guardian_mobile_number", "");
-    setValue("section", section?.name || "");
+    setValue("section", "");
     setValue("leftSideImage", "");
     setValue("frontSideImage", "");
     setValue("rightSideImage", "");
     setCurrentCapture("front");
     setShowWebcam(true);
+    setWebcamError(null);
   };
 
   const onFormSubmit = (data: StudentProfileFormData) => {
@@ -161,16 +169,15 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
     }
   };
 
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      resetForm();
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Dialog.Root
-      open={open}
-      onOpenChange={(open) => {
-        if (!open) {
-          resetForm();
-        }
-        onOpenChange(open);
-      }}
-    >
+    <Dialog.Root open={open} onOpenChange={handleDialogClose}>
       <Dialog.Content className="max-w-md">
         <Dialog.Title>{title}</Dialog.Title>
         <Dialog.Description className="text-gray-500 mb-4">
@@ -383,9 +390,11 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
                       className="!w-full"
                     />
                     <Select.Content>
-                      <Select.Item value={section?.name || ""}>
-                        {section?.name || ""}
-                      </Select.Item>
+                      {sections.map((section) => (
+                        <Select.Item key={section.id} value={section.id}>
+                          {section.name}
+                        </Select.Item>
+                      ))}
                     </Select.Content>
                   </Select.Root>
                 )}

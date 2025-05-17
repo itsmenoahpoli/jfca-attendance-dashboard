@@ -9,6 +9,12 @@ export interface Student {
   guardian_name: string;
   guardian_contact: string;
   section_id: string;
+  section?: {
+    id: string;
+    name: string;
+    level: string;
+    school_year: string;
+  };
   images?: {
     facefront: string;
     faceleft: string;

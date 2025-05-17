@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Flex, TextField, Select } from "@radix-ui/themes";
-import { Clock, Trash2, PenSquare, Plus } from "lucide-react";
+import { Clock, Trash2, PenSquare, Plus, QrCode } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import {
@@ -14,27 +14,36 @@ import {
 } from "@/components/modules/students/student-profile-form";
 import { DeleteConfirmationDialog } from "@/components/modules/common/delete-confirmation-dialog";
 import { StudentQRDialog } from "@/components/modules/students/student-qr-dialog";
+import { StudentAttendanceLogsDialog } from "@/components/modules/students/student-attendance-logs-dialog";
 
 const StudentsTable: React.FC<{
   data: Student[];
   onEdit: (student: Student) => void;
   onDelete: (student: Student) => void;
   onViewQR: (student: Student) => void;
-}> = ({ data, onEdit, onDelete, onViewQR }) => (
+  onViewAttendance: (student: Student) => void;
+}> = ({ data, onEdit, onDelete, onViewQR, onViewAttendance }) => (
   <div className="overflow-x-auto">
     <table className="min-w-full bg-white rounded-lg">
       <thead className="bg-gray-50">
         <tr>
-          {["Full Name", "Email", "Contact", "Status", "Actions"].map(
-            (header) => (
-              <th
-                key={header}
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                {header}
-              </th>
-            )
-          )}
+          {[
+            "Full Name",
+            "Email",
+            "Contact",
+            "Section",
+            "Year Level",
+            "School Year",
+            "Status",
+            "Actions",
+          ].map((header) => (
+            <th
+              key={header}
+              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
+              {header}
+            </th>
+          ))}
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-200">
@@ -49,13 +58,18 @@ const StudentsTable: React.FC<{
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
               {item.contact}
             </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {item.section?.name || "N/A"}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {item.section?.level || "N/A"}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              {item.section?.school_year || "N/A"}
+            </td>
             <td className="px-6 py-4 whitespace-nowrap">
               <span
-                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                  true // Always show as active since we don't have is_enabled
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
+                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800`}
               >
                 Active
               </span>
@@ -64,9 +78,17 @@ const StudentsTable: React.FC<{
               <Flex gap="2">
                 <Button
                   variant="soft"
-                  color="blue"
+                  color="green"
                   size="1"
                   onClick={() => onViewQR(item)}
+                >
+                  <QrCode size={14} />
+                </Button>
+                <Button
+                  variant="soft"
+                  color="blue"
+                  size="1"
+                  onClick={() => onViewAttendance(item)}
                 >
                   <Clock size={14} />
                 </Button>
@@ -146,6 +168,8 @@ export const StudentsPage: React.FC = () => {
   >();
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [qrDialogOpen, setQrDialogOpen] = React.useState(false);
+  const [attendanceLogsDialogOpen, setAttendanceLogsDialogOpen] =
+    React.useState(false);
   const [filters, setFilters] = React.useState({
     search: "",
     yearLevel: "all",
@@ -212,8 +236,9 @@ export const StudentsPage: React.FC = () => {
       gender: data.gender,
       contact: data.contact,
       guardian_name: data.guardian_name,
+      guardian_relation: data.guardian_relation,
       guardian_mobile_number: data.guardian_mobile_number,
-      section_id: data.section,
+      section_id: selectedStudent?.section_id || data.section,
       leftSideImage: data.leftSideImage,
       frontSideImage: data.frontSideImage,
       rightSideImage: data.rightSideImage,
@@ -309,6 +334,10 @@ export const StudentsPage: React.FC = () => {
               setSelectedStudent(student);
               setQrDialogOpen(true);
             }}
+            onViewAttendance={(student) => {
+              setSelectedStudent(student);
+              setAttendanceLogsDialogOpen(true);
+            }}
           />
         )}
 
@@ -331,6 +360,14 @@ export const StudentsPage: React.FC = () => {
         initialData={selectedStudent}
         title={selectedStudent ? "Edit Student" : "Add New Student"}
         submitButtonText={selectedStudent ? "Update Student" : "Add Student"}
+        section={
+          selectedStudent?.section
+            ? {
+                ...selectedStudent.section,
+                is_enabled: true,
+              }
+            : undefined
+        }
       />
 
       <DeleteConfirmationDialog
@@ -349,6 +386,17 @@ export const StudentsPage: React.FC = () => {
         open={qrDialogOpen}
         onOpenChange={(open) => {
           setQrDialogOpen(open);
+          if (!open) {
+            setSelectedStudent(undefined);
+          }
+        }}
+        student={selectedStudent}
+      />
+
+      <StudentAttendanceLogsDialog
+        open={attendanceLogsDialogOpen}
+        onOpenChange={(open) => {
+          setAttendanceLogsDialogOpen(open);
           if (!open) {
             setSelectedStudent(undefined);
           }
