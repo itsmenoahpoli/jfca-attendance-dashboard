@@ -7,7 +7,7 @@ export interface Student {
   gender: string;
   contact: string;
   guardian_name: string;
-  guardian_contact: string;
+  guardian_mobile_number: string;
   section_id: string;
   section?: {
     id: string;
@@ -66,7 +66,7 @@ export const useStudentsService = () => {
 
     const imagePromises = [];
 
-    if (data.leftSideImage) {
+    if (data.leftSideImage && data.leftSideImage.startsWith("data:")) {
       imagePromises.push(
         fetch(data.leftSideImage)
           .then((r) => r.blob())
@@ -76,7 +76,7 @@ export const useStudentsService = () => {
       );
     }
 
-    if (data.frontSideImage) {
+    if (data.frontSideImage && data.frontSideImage.startsWith("data:")) {
       imagePromises.push(
         fetch(data.frontSideImage)
           .then((r) => r.blob())
@@ -86,7 +86,7 @@ export const useStudentsService = () => {
       );
     }
 
-    if (data.rightSideImage) {
+    if (data.rightSideImage && data.rightSideImage.startsWith("data:")) {
       imagePromises.push(
         fetch(data.rightSideImage)
           .then((r) => r.blob())
@@ -127,7 +127,7 @@ export const useStudentsService = () => {
 
     const imagePromises = [];
 
-    if (data.leftSideImage) {
+    if (data.leftSideImage && data.leftSideImage.startsWith("data:")) {
       imagePromises.push(
         fetch(data.leftSideImage)
           .then((r) => r.blob())
@@ -137,7 +137,7 @@ export const useStudentsService = () => {
       );
     }
 
-    if (data.frontSideImage) {
+    if (data.frontSideImage && data.frontSideImage.startsWith("data:")) {
       imagePromises.push(
         fetch(data.frontSideImage)
           .then((r) => r.blob())
@@ -147,7 +147,7 @@ export const useStudentsService = () => {
       );
     }
 
-    if (data.rightSideImage) {
+    if (data.rightSideImage && data.rightSideImage.startsWith("data:")) {
       imagePromises.push(
         fetch(data.rightSideImage)
           .then((r) => r.blob())

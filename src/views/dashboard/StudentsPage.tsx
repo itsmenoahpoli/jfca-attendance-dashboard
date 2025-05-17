@@ -28,6 +28,7 @@ const StudentsTable: React.FC<{
       <thead className="bg-gray-50">
         <tr>
           {[
+            "Photo",
             "Full Name",
             "Email",
             "Contact",
@@ -49,6 +50,21 @@ const StudentsTable: React.FC<{
       <tbody className="divide-y divide-gray-200">
         {data.map((item) => (
           <tr key={item.id} className="hover:bg-gray-50">
+            <td className="px-6 py-4 whitespace-nowrap">
+              {item.images?.facefront ? (
+                <img
+                  src={item.images.facefront}
+                  alt={item.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <span className="text-sm font-medium text-blue-600">
+                    {item.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
               {item.name}
             </td>
@@ -360,14 +376,6 @@ export const StudentsPage: React.FC = () => {
         initialData={selectedStudent}
         title={selectedStudent ? "Edit Student" : "Add New Student"}
         submitButtonText={selectedStudent ? "Update Student" : "Add Student"}
-        section={
-          selectedStudent?.section
-            ? {
-                ...selectedStudent.section,
-                is_enabled: true,
-              }
-            : undefined
-        }
       />
 
       <DeleteConfirmationDialog

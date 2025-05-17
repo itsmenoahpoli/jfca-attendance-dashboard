@@ -4,7 +4,7 @@ import Webcam from "react-webcam";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { type Section, useSectionsService } from "@/services/sections.service";
+import { useSectionsService } from "@/services/sections.service";
 import { AlertTriangle, Webcam as WebcamIcon } from "lucide-react";
 import { type Student } from "@/services/students.service";
 import { useQuery } from "@tanstack/react-query";
@@ -32,7 +32,6 @@ type StudentProfileFormProps = {
   initialData?: Partial<Student>;
   title?: string;
   submitButtonText?: string;
-  section?: Section;
 };
 
 const initStudentState: StudentProfileFormData = {
@@ -56,7 +55,6 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
   initialData,
   title = "Add New Student",
   submitButtonText = "Add Student",
-  section,
 }) => {
   const sectionsService = useSectionsService();
   const { data: sections = [] } = useQuery({
@@ -73,7 +71,8 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
   } = useForm<StudentProfileFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: initStudentState,
-    mode: "onChange",
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
   });
 
   React.useEffect(() => {
@@ -84,8 +83,11 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
       setValue("contact", initialData.contact || "");
       setValue("guardian_name", initialData.guardian_name || "");
       setValue("guardian_relation", "parent");
-      setValue("guardian_mobile_number", initialData.guardian_contact || "");
-      setValue("section", section?.name || "");
+      setValue(
+        "guardian_mobile_number",
+        initialData.guardian_mobile_number || ""
+      );
+      setValue("section", initialData.section_id || "");
 
       if (
         initialData.images?.facefront ||
@@ -104,7 +106,7 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
         setCurrentCapture("front");
       }
     }
-  }, [initialData, section, setValue]);
+  }, [initialData, setValue]);
 
   const leftSideImage = watch("leftSideImage");
   const frontSideImage = watch("frontSideImage");
