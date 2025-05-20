@@ -3,8 +3,6 @@ import { Button, Flex, TextField, Select } from "@radix-ui/themes";
 import { Clock, Trash2, PenSquare, Plus, QrCode, FileDown } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import {
   useStudentsService,
   type Student,
@@ -18,7 +16,6 @@ import { DeleteConfirmationDialog } from "@/components/modules/common/delete-con
 import { StudentQRDialog } from "@/components/modules/students/student-qr-dialog";
 import { StudentAttendanceLogsDialog } from "@/components/modules/students/student-attendance-logs-dialog";
 import { QRPreviewDialog } from "@/components/modules/students/student-qr-preview-dialog";
-import { AppQRCode } from "@/components";
 
 const StudentsTable: React.FC<{
   data: Student[];
@@ -375,73 +372,6 @@ export const StudentsPage: React.FC = () => {
     setQrPreviewOpen(true);
   };
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 10;
-    const qrSize = 40;
-    const rowHeight = 50;
-    let currentY = margin;
-
-    doc.setFontSize(16);
-    doc.text("Student QR Codes", pageWidth / 2, currentY, { align: "center" });
-    currentY += 20;
-
-    const tableData = filteredStudents.map((student) => [
-      student.section?.name || "N/A",
-      student.id,
-      student.name,
-      student.email,
-    ]);
-
-    autoTable(doc, {
-      head: [["Class", "Student ID", "Name", "Email"]],
-      body: tableData,
-      startY: currentY,
-      theme: "grid",
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [41, 128, 185] },
-    });
-
-    currentY = (doc as any).lastAutoTable.finalY + 10;
-
-    filteredStudents.forEach((student) => {
-      if (currentY + rowHeight > pageHeight - margin) {
-        doc.addPage();
-        currentY = margin;
-      }
-
-      const qrCode = document.createElement("div");
-      qrCode.innerHTML = `<div class="qr-code">${AppQRCode({
-        value: student.id,
-        size: qrSize,
-      })}</div>`;
-      const svgElement = qrCode.querySelector("svg");
-      if (svgElement) {
-        const svgData = new XMLSerializer().serializeToString(svgElement);
-        const imgData = "data:image/svg+xml;base64," + btoa(svgData);
-        doc.addImage(imgData, "PNG", margin, currentY, qrSize, qrSize);
-      }
-
-      doc.setFontSize(10);
-      doc.text(student.name, margin + qrSize + 10, currentY + 10);
-      doc.setFontSize(8);
-      doc.text(`ID: ${student.id}`, margin + qrSize + 10, currentY + 20);
-      doc.text(
-        `Class: ${student.section?.name || "N/A"}`,
-        margin + qrSize + 10,
-        currentY + 30
-      );
-
-      currentY += rowHeight;
-    });
-
-    doc.save("student-qr-codes.pdf");
-    toast.success("QR codes exported successfully");
-    setQrPreviewOpen(false);
-  };
-
   return (
     <div className="h-full w-full p-4">
       <h1 className="text-2xl font-bold mb-6">Students Management</h1>
@@ -567,7 +497,6 @@ export const StudentsPage: React.FC = () => {
         open={qrPreviewOpen}
         onOpenChange={setQrPreviewOpen}
         students={filteredStudents}
-        onExport={handleExportPDF}
       />
     </div>
   );
