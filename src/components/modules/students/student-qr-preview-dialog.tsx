@@ -58,7 +58,7 @@ export const QRPreviewDialog: React.FC<QRPreviewDialogProps> = ({
     const margin = 10;
     doc.addImage(logoBase64, "PNG", margin, 8, logoSize, logoSize);
     doc.setFontSize(14);
-    doc.text("JESUS CHRISTIAN FAITH ACADEMY", margin + logoSize + 6, 16);
+    doc.text("JUBILEE CHRISTIAN FAITH ACADEMY", margin + logoSize + 6, 16);
     doc.setFontSize(10);
     doc.text("Imus, Cavite", margin + logoSize + 6, 22);
     doc.setLineWidth(0.5);
