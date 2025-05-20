@@ -1,8 +1,10 @@
 import React from "react";
 import { Button, Flex, TextField, Select } from "@radix-ui/themes";
-import { Clock, Trash2, PenSquare, Plus, QrCode } from "lucide-react";
+import { Clock, Trash2, PenSquare, Plus, QrCode, FileDown } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   useStudentsService,
   type Student,
@@ -15,6 +17,8 @@ import {
 import { DeleteConfirmationDialog } from "@/components/modules/common/delete-confirmation-dialog";
 import { StudentQRDialog } from "@/components/modules/students/student-qr-dialog";
 import { StudentAttendanceLogsDialog } from "@/components/modules/students/student-attendance-logs-dialog";
+import { QRPreviewDialog } from "@/components/modules/students/student-qr-preview-dialog";
+import { AppQRCode } from "@/components";
 
 const StudentsTable: React.FC<{
   data: Student[];
@@ -22,35 +26,79 @@ const StudentsTable: React.FC<{
   onDelete: (student: Student) => void;
   onViewQR: (student: Student) => void;
   onViewAttendance: (student: Student) => void;
-}> = ({ data, onEdit, onDelete, onViewQR, onViewAttendance }) => (
+  selectedStudents: string[];
+  onSelectionChange: (studentId: string) => void;
+}> = ({
+  data,
+  onEdit,
+  onDelete,
+  onViewQR,
+  onViewAttendance,
+  selectedStudents,
+  onSelectionChange,
+}) => (
   <div className="overflow-x-auto">
     <table className="min-w-full bg-white rounded-lg">
       <thead className="bg-gray-50">
         <tr>
-          {[
-            "Photo",
-            "Full Name",
-            "Email",
-            "Contact",
-            "Section",
-            "Year Level",
-            "School Year",
-            "Status",
-            "Actions",
-          ].map((header) => (
-            <th
-              key={header}
-              className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              {header}
-            </th>
-          ))}
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+            <input
+              type="checkbox"
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              checked={selectedStudents.length === data.length}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  data.forEach((student) => onSelectionChange(student.id));
+                } else {
+                  data.forEach((student) => onSelectionChange(student.id));
+                }
+              }}
+            />
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+            Photo
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+            Full Name
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+            Email
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+            Contact
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+            Section
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+            Year Level
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+            School Year
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+            Status
+          </th>
+          <th
+            className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider align-middle"
+            style={{ width: "180px" }}
+          >
+            Actions
+          </th>
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-200">
         {data.map((item) => (
           <tr key={item.id} className="hover:bg-gray-50">
-            <td className="px-6 py-4 whitespace-nowrap">
+            <td className="px-6 py-4 whitespace-nowrap align-middle">
+              <input
+                type="checkbox"
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                checked={selectedStudents.includes(item.id)}
+                onChange={() => onSelectionChange(item.id)}
+              />
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap align-middle">
               {item.images?.facefront ? (
                 <img
                   src={item.images.facefront}
@@ -65,33 +113,42 @@ const StudentsTable: React.FC<{
                 </div>
               )}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 align-middle">
               {item.name}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-middle">
               {item.email}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-middle">
               {item.contact}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {item.section?.name || "N/A"}
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-middle">
+              <p className="text-xs text-gray-500">
+                <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 my-1 inline-block">
+                  {item.section?.name
+                    ? `${item.section.name} - ${item.section.level} (${item.section.school_year})`
+                    : "N/A"}
+                </span>
+              </p>
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-middle">
               {item.section?.level || "N/A"}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-middle">
               {item.section?.school_year || "N/A"}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap">
+            <td className="px-6 py-4 whitespace-nowrap align-middle">
               <span
                 className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800`}
               >
                 Active
               </span>
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              <Flex gap="2">
+            <td
+              className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-middle text-center"
+              style={{ width: "180px" }}
+            >
+              <Flex gap="2" justify="center">
                 <Button
                   variant="soft"
                   color="green"
@@ -186,12 +243,14 @@ export const StudentsPage: React.FC = () => {
   const [qrDialogOpen, setQrDialogOpen] = React.useState(false);
   const [attendanceLogsDialogOpen, setAttendanceLogsDialogOpen] =
     React.useState(false);
+  const [selectedStudents, setSelectedStudents] = React.useState<string[]>([]);
   const [filters, setFilters] = React.useState({
     search: "",
     yearLevel: "all",
     class: "all",
     status: "all",
   });
+  const [qrPreviewOpen, setQrPreviewOpen] = React.useState(false);
 
   const queryClient = useQueryClient();
   const studentsService = useStudentsService();
@@ -281,6 +340,16 @@ export const StudentsPage: React.FC = () => {
     }
   };
 
+  const handleSelectionChange = (studentId: string) => {
+    setSelectedStudents((prev) => {
+      if (prev.includes(studentId)) {
+        return prev.filter((id) => id !== studentId);
+      } else {
+        return [...prev, studentId];
+      }
+    });
+  };
+
   const filteredStudents = React.useMemo(() => {
     return students.filter((student) => {
       const matchesSearch = student.name
@@ -297,6 +366,81 @@ export const StudentsPage: React.FC = () => {
       return matchesSearch && matchesYearLevel && matchesClass && matchesStatus;
     });
   }, [students, filters]);
+
+  const handleBatchExportQR = () => {
+    if (filteredStudents.length === 0) {
+      toast.warning("No students to export");
+      return;
+    }
+    setQrPreviewOpen(true);
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 10;
+    const qrSize = 40;
+    const rowHeight = 50;
+    let currentY = margin;
+
+    doc.setFontSize(16);
+    doc.text("Student QR Codes", pageWidth / 2, currentY, { align: "center" });
+    currentY += 20;
+
+    const tableData = filteredStudents.map((student) => [
+      student.section?.name || "N/A",
+      student.id,
+      student.name,
+      student.email,
+    ]);
+
+    autoTable(doc, {
+      head: [["Class", "Student ID", "Name", "Email"]],
+      body: tableData,
+      startY: currentY,
+      theme: "grid",
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 10;
+
+    filteredStudents.forEach((student) => {
+      if (currentY + rowHeight > pageHeight - margin) {
+        doc.addPage();
+        currentY = margin;
+      }
+
+      const qrCode = document.createElement("div");
+      qrCode.innerHTML = `<div class="qr-code">${AppQRCode({
+        value: student.id,
+        size: qrSize,
+      })}</div>`;
+      const svgElement = qrCode.querySelector("svg");
+      if (svgElement) {
+        const svgData = new XMLSerializer().serializeToString(svgElement);
+        const imgData = "data:image/svg+xml;base64," + btoa(svgData);
+        doc.addImage(imgData, "PNG", margin, currentY, qrSize, qrSize);
+      }
+
+      doc.setFontSize(10);
+      doc.text(student.name, margin + qrSize + 10, currentY + 10);
+      doc.setFontSize(8);
+      doc.text(`ID: ${student.id}`, margin + qrSize + 10, currentY + 20);
+      doc.text(
+        `Class: ${student.section?.name || "N/A"}`,
+        margin + qrSize + 10,
+        currentY + 30
+      );
+
+      currentY += rowHeight;
+    });
+
+    doc.save("student-qr-codes.pdf");
+    toast.success("QR codes exported successfully");
+    setQrPreviewOpen(false);
+  };
 
   return (
     <div className="h-full w-full p-4">
@@ -318,9 +462,14 @@ export const StudentsPage: React.FC = () => {
               setFilters((prev) => ({ ...prev, status: value }))
             }
           />
-          <Button color="green" onClick={() => setDialogOpen(true)}>
-            <Plus size={16} /> Add Student
-          </Button>
+          <Flex gap="2">
+            <Button color="blue" onClick={handleBatchExportQR}>
+              <FileDown size={16} /> Batch Export QR Codes
+            </Button>
+            <Button color="green" onClick={() => setDialogOpen(true)}>
+              <Plus size={16} /> Add Student
+            </Button>
+          </Flex>
         </Flex>
 
         {isLoading ? (
@@ -354,6 +503,8 @@ export const StudentsPage: React.FC = () => {
               setSelectedStudent(student);
               setAttendanceLogsDialogOpen(true);
             }}
+            selectedStudents={selectedStudents}
+            onSelectionChange={handleSelectionChange}
           />
         )}
 
@@ -410,6 +561,13 @@ export const StudentsPage: React.FC = () => {
           }
         }}
         student={selectedStudent}
+      />
+
+      <QRPreviewDialog
+        open={qrPreviewOpen}
+        onOpenChange={setQrPreviewOpen}
+        students={filteredStudents}
+        onExport={handleExportPDF}
       />
     </div>
   );

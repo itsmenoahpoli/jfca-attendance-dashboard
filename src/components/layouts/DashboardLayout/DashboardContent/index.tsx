@@ -14,7 +14,9 @@ export const DashboardContent: React.FC<Props> = (props) => {
       } transition-all duration-200 h-full w-full !bg-slate-100`}
     >
       <ContentNavbar />
-      <div className="p-2">{props.children}</div>
+      <div className="p-2" style={{ zoom: 0.85 }}>
+        {props.children}
+      </div>
     </div>
   );
 };
