@@ -9,6 +9,7 @@ export interface Student {
   guardian_name: string;
   guardian_mobile_number: string;
   section_id: string;
+  student_key: string;
   section?: {
     id: string;
     name: string;

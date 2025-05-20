@@ -374,7 +374,7 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
           }
         }}
         onSubmit={handleAddStudent}
-        section={section}
+        section={section!}
         initialData={selectedStudent}
         title={selectedStudent ? "Edit Student" : "Add New Student"}
         submitButtonText={selectedStudent ? "Update Student" : "Add Student"}

@@ -59,6 +59,9 @@ const StudentsTable: React.FC<{
             Full Name
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
+            Student Key
+          </th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
             Email
           </th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider align-middle">
@@ -112,6 +115,9 @@ const StudentsTable: React.FC<{
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 align-middle">
               {item.name}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-middle">
+              {item.student_key}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-middle">
               {item.email}
@@ -191,8 +197,7 @@ const Filters: React.FC<{
   onSearch: (value: string) => void;
   onYearLevelChange: (value: string) => void;
   onClassChange: (value: string) => void;
-  onStatusChange: (value: string) => void;
-}> = ({ onSearch, onYearLevelChange, onClassChange, onStatusChange }) => (
+}> = ({ onSearch, onYearLevelChange, onClassChange }) => (
   <Flex gap="3">
     <TextField.Root
       size="2"
@@ -220,14 +225,6 @@ const Filters: React.FC<{
         <Select.Item value="12b">Grade 12-B</Select.Item>
       </Select.Content>
     </Select.Root>
-    <Select.Root defaultValue="all" size="2" onValueChange={onStatusChange}>
-      <Select.Trigger placeholder="Status" />
-      <Select.Content>
-        <Select.Item value="all">All Status</Select.Item>
-        <Select.Item value="active">Active</Select.Item>
-        <Select.Item value="inactive">Inactive</Select.Item>
-      </Select.Content>
-    </Select.Root>
   </Flex>
 );
 
@@ -245,7 +242,6 @@ export const StudentsPage: React.FC = () => {
     search: "",
     yearLevel: "all",
     class: "all",
-    status: "all",
   });
   const [qrPreviewOpen, setQrPreviewOpen] = React.useState(false);
 
@@ -354,13 +350,14 @@ export const StudentsPage: React.FC = () => {
         .includes(filters.search.toLowerCase());
       const matchesYearLevel =
         filters.yearLevel === "all" ||
-        student.section_id.includes(filters.yearLevel);
+        student.section?.level === filters.yearLevel;
       const matchesClass =
-        filters.class === "all" || student.section_id.includes(filters.class);
-      const matchesStatus =
-        filters.status === "all" || filters.status === "active"; // Always show active since we don't have is_enabled
+        filters.class === "all" ||
+        student.section?.name
+          ?.toLowerCase()
+          .includes(filters.class.toLowerCase());
 
-      return matchesSearch && matchesYearLevel && matchesClass && matchesStatus;
+      return matchesSearch && matchesYearLevel && matchesClass;
     });
   }, [students, filters]);
 
@@ -387,9 +384,6 @@ export const StudentsPage: React.FC = () => {
             }
             onClassChange={(value) =>
               setFilters((prev) => ({ ...prev, class: value }))
-            }
-            onStatusChange={(value) =>
-              setFilters((prev) => ({ ...prev, status: value }))
             }
           />
           <Flex gap="2">

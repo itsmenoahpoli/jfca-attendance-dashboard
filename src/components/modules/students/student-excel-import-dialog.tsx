@@ -59,6 +59,8 @@ export const StudentExcelImportDialog: React.FC<
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sections"] });
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.refetchQueries({ queryKey: ["sections"] });
+      queryClient.refetchQueries({ queryKey: ["students"] });
       setAlert({ type: "success", message: "Students imported successfully" });
       setTimeout(() => {
         onOpenChange(false);

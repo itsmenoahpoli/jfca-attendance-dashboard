@@ -4,9 +4,10 @@ import Webcam from "react-webcam";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useSectionsService } from "@/services/sections.service";
 import { AlertTriangle, Webcam as WebcamIcon } from "lucide-react";
 import { type Student } from "@/services/students.service";
+import { type Section } from "@/services/sections.service";
+import { useSectionsService } from "@/services/sections.service";
 import { useQuery } from "@tanstack/react-query";
 
 const formSchema = z.object({
@@ -32,6 +33,7 @@ type StudentProfileFormProps = {
   initialData?: Partial<Student>;
   title?: string;
   submitButtonText?: string;
+  section?: Section;
 };
 
 const initStudentState: StudentProfileFormData = {
@@ -55,6 +57,7 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
   initialData,
   title = "Add New Student",
   submitButtonText = "Add Student",
+  section,
 }) => {
   const sectionsService = useSectionsService();
   const { data: sections = [] } = useQuery({
@@ -70,7 +73,10 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
     formState: { errors, isSubmitting },
   } = useForm<StudentProfileFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: initStudentState,
+    defaultValues: {
+      ...initStudentState,
+      section: section?.id || "",
+    },
     mode: "onSubmit",
     reValidateMode: "onSubmit",
   });
@@ -87,7 +93,7 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
         "guardian_mobile_number",
         initialData.guardian_mobile_number || ""
       );
-      setValue("section", initialData.section_id || "");
+      setValue("section", section?.id || initialData.section_id || "");
 
       if (
         initialData.images?.facefront ||
@@ -106,7 +112,7 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
         setCurrentCapture("front");
       }
     }
-  }, [initialData, setValue]);
+  }, [initialData, setValue, section?.id]);
 
   const leftSideImage = watch("leftSideImage");
   const frontSideImage = watch("frontSideImage");
@@ -382,26 +388,30 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
               <Controller
                 name="section"
                 control={control}
-                render={({ field }) => (
-                  <Select.Root
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <Select.Trigger
-                      placeholder="Select section"
-                      className="!w-full"
-                    />
-                    <Select.Content>
-                      {sections.map((section) => (
-                        <Select.Item key={section.id} value={section.id}>
-                          {section.name}
-                        </Select.Item>
-                      ))}
-                    </Select.Content>
-                  </Select.Root>
-                )}
+                render={({ field }) =>
+                  section ? (
+                    <TextField.Root type="text" value={section.name} disabled />
+                  ) : (
+                    <Select.Root
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <Select.Trigger
+                        placeholder="Select section"
+                        className="!w-full"
+                      />
+                      <Select.Content>
+                        {sections.map((section) => (
+                          <Select.Item key={section.id} value={section.id}>
+                            {section.name}
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Root>
+                  )
+                }
               />
-              {errors.section && (
+              {!section && errors.section && (
                 <p className="text-red-500 text-sm mt-1">
                   {errors.section.message}
                 </p>
