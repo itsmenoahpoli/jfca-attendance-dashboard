@@ -10,6 +10,11 @@ interface AttendanceCounterModuleProps {
   isWebcamEnabled: boolean;
 }
 
+interface AttendanceStatus {
+  in_status: boolean;
+  out_status: boolean;
+}
+
 const feedOptions = [
   {
     label: "Webcam Feed (Face Recognition)",
@@ -21,10 +26,38 @@ const feedOptions = [
   },
 ];
 
+const StatusBanner: React.FC<{ status: AttendanceStatus }> = ({ status }) => {
+  const isTimeIn = status.in_status && !status.out_status;
+  const isTimeOut = status.in_status && status.out_status;
+
+  return (
+    <div
+      className={`w-full p-4 rounded-lg mb-4 ${
+        isTimeIn
+          ? "bg-green-50 border border-green-200"
+          : "bg-blue-50 border border-blue-200"
+      }`}
+    >
+      <p
+        className={`text-center font-semibold ${
+          isTimeIn ? "text-green-700" : "text-blue-700"
+        }`}
+      >
+        {isTimeIn
+          ? "TIME IN ATTENDANCE"
+          : isTimeOut
+          ? "TIME OUT ATTENDANCE"
+          : "UNKNOWN STATUS"}
+      </p>
+    </div>
+  );
+};
+
 const StudentDataBanner: React.FC<{
   student: Student | null;
   onReset: () => void;
-}> = ({ student, onReset }) => {
+  attendanceStatus?: AttendanceStatus;
+}> = ({ student, onReset, attendanceStatus }) => {
   return (
     <Flex className="h-full" direction="column">
       <Flex justify="between" align="center">
@@ -43,6 +76,7 @@ const StudentDataBanner: React.FC<{
       </Flex>
       {student ? (
         <div className="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {attendanceStatus && <StatusBanner status={attendanceStatus} />}
           <Flex direction="column" gap="6">
             <Flex justify="center">
               {student.images?.facefront ? (
@@ -68,17 +102,29 @@ const StudentDataBanner: React.FC<{
                 <div className="space-y-4">
                   <div>
                     <p className="text-sm text-gray-500">Name</p>
-                    <p className="font-medium text-lg">{student.name}</p>
+                    <p className="font-medium">{student.name}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Student Record ID (System)
+                    </p>
+                    <p className="font-medium">{student.id}</p>
                   </div>
 
                   <div>
                     <p className="text-sm text-gray-500">Student ID</p>
-                    <p className="font-medium">{student.id}</p>
+                    <p className="font-medium">{student.student_key}</p>
                   </div>
 
                   <div>
                     <p className="text-sm text-gray-500">Email</p>
                     <p className="font-medium">{student.email}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Gender</p>
+                    <p className="font-medium">{student.gender}</p>
                   </div>
 
                   <div>
@@ -104,6 +150,13 @@ const StudentDataBanner: React.FC<{
                     <p className="text-sm text-gray-500">Name</p>
                     <p className="font-medium">
                       {student.guardian_name || "-"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">Relation</p>
+                    <p className="font-medium">
+                      {student.guardian_relation || "-"}
                     </p>
                   </div>
 
@@ -144,6 +197,8 @@ export const AttendanceCounterModule: React.FC<
   const [scannedStudent, setScannedStudent] = React.useState<Student | null>(
     null
   );
+  const [attendanceStatus, setAttendanceStatus] =
+    React.useState<AttendanceStatus | null>(null);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -157,17 +212,25 @@ export const AttendanceCounterModule: React.FC<
     setSelectedFeed(value);
   };
 
-  const handleStudentScanned = (student: Student | null) => {
+  const handleStudentScanned = (
+    student: Student | null,
+    status?: AttendanceStatus
+  ) => {
+    console.log("Student scanned with status:", status);
     setScannedStudent(student);
+    setAttendanceStatus(status || null);
   };
 
   const handleResetScanned = () => {
     setScannedStudent(null);
+    setAttendanceStatus(null);
   };
 
   if (isLoading) {
     return <FullScreenLoader />;
   }
+
+  console.log("Current attendance status:", attendanceStatus);
 
   return (
     <div className="w-full h-full p-10">
@@ -209,6 +272,7 @@ export const AttendanceCounterModule: React.FC<
           <StudentDataBanner
             student={scannedStudent}
             onReset={handleResetScanned}
+            attendanceStatus={attendanceStatus || undefined}
           />
         </div>
       </Flex>

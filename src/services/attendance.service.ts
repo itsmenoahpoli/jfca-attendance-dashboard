@@ -9,6 +9,8 @@ export interface AttendanceLog {
   studentClass: string;
   status: "Recorded";
   recordedAt: Date;
+  in_status: boolean;
+  out_status: boolean;
 }
 
 export const useAttendanceService = () => {

@@ -14,7 +14,10 @@ import { Button } from "@radix-ui/themes";
 
 interface QrScanFeedProps {
   isEnabled: boolean;
-  onStudentScanned: (student: Student | null) => void;
+  onStudentScanned: (
+    student: Student | null,
+    status?: { in_status: boolean; out_status: boolean }
+  ) => void;
 }
 
 interface IDetectedBarcode {
@@ -26,7 +29,6 @@ export const QrScanFeed: React.FC<QrScanFeedProps> = ({
   onStudentScanned,
 }) => {
   const [scannedValue, setScannedValue] = useState<string>("");
-  const [student, setStudent] = useState<Student | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -40,7 +42,7 @@ export const QrScanFeed: React.FC<QrScanFeedProps> = ({
     if (detectedCodes.length > 0) {
       const studentId = detectedCodes[0].rawValue;
 
-      if (studentId === scannedValue && student) return;
+      if (studentId === scannedValue) return;
 
       setScannedValue(studentId);
       setErrorMessage("");
@@ -48,10 +50,12 @@ export const QrScanFeed: React.FC<QrScanFeedProps> = ({
       try {
         setIsLoading(true);
         const studentData = await getStudent(studentId);
-        setStudent(studentData);
-        onStudentScanned(studentData);
-
-        await timeInOut(studentId);
+        const attendanceResponse = await timeInOut(studentId);
+        console.log("Attendance API response:", attendanceResponse);
+        onStudentScanned(studentData, {
+          in_status: attendanceResponse.in_status,
+          out_status: attendanceResponse.out_status,
+        });
 
         setTimeout(() => {
           setScannedValue("");
@@ -59,7 +63,6 @@ export const QrScanFeed: React.FC<QrScanFeedProps> = ({
         }, 3000);
       } catch (error: any) {
         console.error("Error processing student data:", error);
-        setStudent(null);
         onStudentScanned(null);
 
         if (error.response?.status === 400) {
@@ -90,7 +93,6 @@ export const QrScanFeed: React.FC<QrScanFeedProps> = ({
   const handleModalClose = () => {
     setShowErrorModal(false);
     setScannedValue("");
-    setStudent(null);
     onStudentScanned(null);
     setErrorMessage("");
     setScannerKey((prev) => prev + 1);
@@ -118,12 +120,11 @@ export const QrScanFeed: React.FC<QrScanFeedProps> = ({
           <p className="text-lg font-medium">Loading student data...</p>
         </div>
       )}
-      {!isLoading && student && (
+      {!isLoading && scannedValue && (
         <div className="text-center mt-4 p-4 bg-gray-100 rounded-lg">
-          <p className="text-lg font-medium">Student Information:</p>
-          <p className="text-gray-700">Name: {student.name}</p>
-          <p className="text-gray-700">ID: {student.id}</p>
-          <p className="text-gray-700">Email: {student.email}</p>
+          <p className="text-lg font-medium">Scanned Value:</p>
+          <p className="text-gray-700">{scannedValue}</p>
+          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
           <Button
             variant="soft"
             color="gray"
@@ -132,26 +133,6 @@ export const QrScanFeed: React.FC<QrScanFeedProps> = ({
           >
             <RotateCcw size={16} className="mr-2" />
             Scan Again
-          </Button>
-        </div>
-      )}
-      {!isLoading && scannedValue && !student && (
-        <div className="text-center mt-4 p-4 bg-gray-100 rounded-lg">
-          <p className="text-lg font-medium">Scanned Value:</p>
-          <p className="text-gray-700">{scannedValue}</p>
-          {errorMessage ? (
-            <p className="text-red-500">{errorMessage}</p>
-          ) : (
-            <p className="text-red-500">Student not found</p>
-          )}
-          <Button
-            variant="soft"
-            color="gray"
-            className="mt-4"
-            onClick={handleReset}
-          >
-            <RotateCcw size={16} className="mr-2" />
-            Try Again
           </Button>
         </div>
       )}

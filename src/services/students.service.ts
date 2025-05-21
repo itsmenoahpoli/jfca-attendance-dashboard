@@ -7,9 +7,11 @@ export interface Student {
   gender: string;
   contact: string;
   guardian_name: string;
+  guardian_relation: string;
   guardian_mobile_number: string;
   section_id: string;
   student_key: string;
+  is_enabled: boolean;
   section?: {
     id: string;
     name: string;
