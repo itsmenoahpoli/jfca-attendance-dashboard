@@ -120,23 +120,25 @@ export const StudentAttendanceLogsDialog: React.FC<
                 <Select.Item value="time-out">Time Out</Select.Item>
               </Select.Content>
             </Select.Root>
-            <Select.Root
-              value={filters.section}
-              onValueChange={(value) =>
-                setFilters((prev) => ({ ...prev, section: value }))
-              }
-              size="2"
-            >
-              <Select.Trigger placeholder="Section" />
-              <Select.Content>
-                <Select.Item value="all">All Sections</Select.Item>
-                {sections.map((section) => (
-                  <Select.Item key={section.id} value={section.name}>
-                    {section.name}
-                  </Select.Item>
-                ))}
-              </Select.Content>
-            </Select.Root>
+            {!student && (
+              <Select.Root
+                value={filters.section}
+                onValueChange={(value) =>
+                  setFilters((prev) => ({ ...prev, section: value }))
+                }
+                size="2"
+              >
+                <Select.Trigger placeholder="Section" />
+                <Select.Content>
+                  <Select.Item value="all">All Sections</Select.Item>
+                  {sections.map((section) => (
+                    <Select.Item key={section.id} value={section.name}>
+                      {section.name}
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Root>
+            )}
           </Flex>
 
           <div className="space-y-6">

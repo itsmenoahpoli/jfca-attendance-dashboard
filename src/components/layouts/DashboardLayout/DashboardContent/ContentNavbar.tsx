@@ -73,7 +73,7 @@ export const ContentNavbar: React.FC = () => {
         >
           <Button
             variant="soft"
-            className="!border-2 !border-blue-500 hover:!bg-blue-50"
+            className="!border !border-blue-500/50 hover:!bg-blue-500/20"
           >
             <QrCode size={ICON_SIZE} className="mr-2" />
             Attendance Module
