@@ -11,12 +11,12 @@ import {
 import {
   StudentProfileForm,
   type StudentProfileFormData,
-} from "@/components/modules/students/student-profile-form";
-import { DeleteConfirmationDialog } from "@/components/modules/common/delete-confirmation-dialog";
-import { StudentQRDialog } from "@/components/modules/students/student-qr-dialog";
-import { StudentAttendanceLogsDialog } from "@/components/modules/students/student-attendance-logs-dialog";
-import { QRPreviewDialog } from "@/components/modules/students/student-qr-preview-dialog";
-import { StudentExportDialog } from "@/components/modules/students/student-export-dialog";
+} from "@/components/modules/students/StudentProfileForm";
+import { DeleteConfirmationDialog } from "@/components/modules/common/DeleteConfirmationDialog";
+import { StudentQRDialog } from "@/components/modules/students/StudentQrDialog";
+import { StudentAttendanceLogsDialog } from "@/components/modules/students/StudentAttendanceLogsDialog";
+import { QRPreviewDialog } from "@/components/modules/students/StudentQrPreviewDialog";
+import { StudentExportDialog } from "@/components/modules/students/StudentExportDialog";
 
 const StudentsTable: React.FC<{
   data: Student[];

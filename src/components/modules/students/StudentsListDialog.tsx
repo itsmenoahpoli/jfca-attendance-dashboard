@@ -12,10 +12,10 @@ import {
 import {
   StudentProfileForm,
   type StudentProfileFormData,
-} from "./student-profile-form";
-import { DeleteConfirmationDialog } from "../common/delete-confirmation-dialog";
-import { StudentQRDialog } from "./student-qr-dialog";
-import { StudentExcelImportDialog } from "./student-excel-import-dialog";
+} from "./StudentProfileForm";
+import { StudentQRDialog } from "./StudentQrDialog";
+import { StudentExcelImportDialog } from "./StudentExcelImportDialog";
+import { DeleteConfirmationDialog } from "../common/DeleteConfirmationDialog";
 
 interface StudentsListDialogProps {
   open: boolean;

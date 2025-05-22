@@ -12,12 +12,12 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useSectionsService, type Section } from "@/services/sections.service";
-import { StudentsListDialog } from "@/components/modules/students/students-list-dialog";
-import { ClassFormDialog } from "@/components/modules/classes/class-form-dialog";
+import { StudentsListDialog } from "@/components/modules/students/StudentsListDialog";
+import { ClassFormDialog } from "@/components/modules/classes/ClassFormDialog";
 import {
   ClassFilters,
   type ClassFilters as ClassFiltersType,
-} from "@/components/modules/classes/class-filters";
+} from "@/components/modules/classes/ClassFilters";
 
 const ClassesTable: React.FC<{
   data: Section[];
