@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Dialog, Flex, TextField, Select } from "@radix-ui/themes";
+import { Button, Dialog, Flex } from "@radix-ui/themes";
 import {
   Clock,
   Trash2,
@@ -13,6 +13,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useSectionsService, type Section } from "@/services/sections.service";
 import { StudentsListDialog } from "@/components/modules/students/students-list-dialog";
+import { ClassFormDialog } from "@/components/modules/classes/class-form-dialog";
+import {
+  ClassFilters,
+  type ClassFilters as ClassFiltersType,
+} from "@/components/modules/classes/class-filters";
 
 const ClassesTable: React.FC<{
   data: Section[];
@@ -96,164 +101,6 @@ const ClassesTable: React.FC<{
     </table>
   </div>
 );
-
-const Filters: React.FC = () => (
-  <Flex gap="3">
-    <TextField.Root size="2" placeholder="Search class name..." />
-    <Select.Root defaultValue="all" size="2">
-      <Select.Trigger placeholder="Year Level" />
-      <Select.Content>
-        <Select.Item value="all">All Year Levels</Select.Item>
-        <Select.Item value="10">Grade 10</Select.Item>
-        <Select.Item value="11">Grade 11</Select.Item>
-        <Select.Item value="12">Grade 12</Select.Item>
-      </Select.Content>
-    </Select.Root>
-    <Select.Root defaultValue="all" size="2">
-      <Select.Trigger placeholder="Status" />
-      <Select.Content>
-        <Select.Item value="all">All Status</Select.Item>
-        <Select.Item value="active">Active</Select.Item>
-        <Select.Item value="inactive">Inactive</Select.Item>
-      </Select.Content>
-    </Select.Root>
-  </Flex>
-);
-
-const AddClassDialog: React.FC<{
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (data: Omit<Section, "id">) => void;
-  initialData?: Section;
-}> = ({ open, onOpenChange, onSubmit, initialData }) => {
-  const [formData, setFormData] = React.useState<Omit<Section, "id">>({
-    name: initialData?.name || "",
-    level: initialData?.level || "",
-    school_year: initialData?.school_year || "",
-    is_enabled: initialData?.is_enabled ?? true,
-  });
-
-  React.useEffect(() => {
-    if (initialData) {
-      setFormData({
-        name: initialData.name,
-        level: initialData.level,
-        school_year: initialData.school_year,
-        is_enabled: initialData.is_enabled,
-      });
-    } else {
-      // Reset form data when adding new section
-      setFormData({
-        name: "",
-        level: "",
-        school_year: "",
-        is_enabled: true,
-      });
-    }
-  }, [initialData, open]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
-    if (!initialData) {
-      setFormData({
-        name: "",
-        level: "",
-        school_year: "",
-        is_enabled: true,
-      });
-    }
-  };
-
-  return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content className="max-w-md">
-        <Dialog.Title>
-          {initialData ? "Edit Class/Section" : "Add New Class/Section"}
-        </Dialog.Title>
-        <Dialog.Description className="text-gray-500 mb-4">
-          {initialData
-            ? "Update the details of this class/section."
-            : "Fill in the details to create a new class/section."}
-        </Dialog.Description>
-        <form onSubmit={handleSubmit}>
-          <Flex direction="column" gap="3" className="mt-4">
-            <TextField.Root
-              placeholder="Class Name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-            />
-            <Select.Root
-              value={formData.level}
-              onValueChange={(value) =>
-                setFormData({ ...formData, level: value })
-              }
-            >
-              <Select.Trigger placeholder="Year Level" />
-              <Select.Content>
-                <Select.Item value="Grade 1">Grade 1</Select.Item>
-                <Select.Item value="Grade 2">Grade 2</Select.Item>
-                <Select.Item value="Grade 3">Grade 3</Select.Item>
-                <Select.Item value="Grade 4">Grade 4</Select.Item>
-                <Select.Item value="Grade 5">Grade 5</Select.Item>
-                <Select.Item value="Grade 6">Grade 6</Select.Item>
-                <Select.Item value="Grade 7">Grade 7</Select.Item>
-                <Select.Item value="Grade 8">Grade 8</Select.Item>
-                <Select.Item value="Grade 9">Grade 9</Select.Item>
-                <Select.Item value="Grade 10">Grade 10</Select.Item>
-                <Select.Item value="Grade 11">Grade 11</Select.Item>
-                <Select.Item value="Grade 12">Grade 12</Select.Item>
-                <Select.Item value="1st Year College">
-                  1st Year College
-                </Select.Item>
-                <Select.Item value="2nd Year College">
-                  2nd Year College
-                </Select.Item>
-                <Select.Item value="3rd Year College">
-                  3rd Year College
-                </Select.Item>
-                <Select.Item value="4th Year College">
-                  4th Year College
-                </Select.Item>
-              </Select.Content>
-            </Select.Root>
-            <TextField.Root
-              placeholder="School Year"
-              value={formData.school_year}
-              onChange={(e) =>
-                setFormData({ ...formData, school_year: e.target.value })
-              }
-            />
-            <Select.Root
-              value={formData.is_enabled ? "active" : "inactive"}
-              onValueChange={(value) =>
-                setFormData({ ...formData, is_enabled: value === "active" })
-              }
-            >
-              <Select.Trigger placeholder="Status" />
-              <Select.Content>
-                <Select.Item value="active">Active</Select.Item>
-                <Select.Item value="inactive">Inactive</Select.Item>
-              </Select.Content>
-            </Select.Root>
-          </Flex>
-          <Flex gap="3" mt="4" justify="end">
-            <Dialog.Close>
-              <Button variant="soft" color="gray">
-                Cancel
-              </Button>
-            </Dialog.Close>
-            <Button type="submit" color="green">
-              {initialData ? "Update Class" : "Save Class"}
-            </Button>
-          </Flex>
-        </form>
-      </Dialog.Content>
-    </Dialog.Root>
-  );
-};
 
 const DeleteConfirmationDialog: React.FC<{
   open: boolean;
@@ -352,6 +199,11 @@ export const ClassesPage: React.FC = () => {
   const [updatedSectionData, setUpdatedSectionData] = React.useState<
     Omit<Section, "id"> | undefined
   >();
+  const [filters, setFilters] = React.useState<ClassFiltersType>({
+    search: "",
+    level: "all",
+    status: "all",
+  });
   const queryClient = useQueryClient();
   const sectionsService = useSectionsService();
 
@@ -359,6 +211,26 @@ export const ClassesPage: React.FC = () => {
     queryKey: ["sections"],
     queryFn: sectionsService.getSections,
   });
+
+  const filteredSections = React.useMemo(() => {
+    return sections.filter((section) => {
+      if (
+        filters.search &&
+        !section.name.toLowerCase().includes(filters.search.toLowerCase())
+      ) {
+        return false;
+      }
+      if (filters.level !== "all" && section.level !== filters.level) {
+        return false;
+      }
+      if (filters.status !== "all") {
+        const isActive = section.is_enabled;
+        if (filters.status === "active" && !isActive) return false;
+        if (filters.status === "inactive" && isActive) return false;
+      }
+      return true;
+    });
+  }, [sections, filters]);
 
   const { data: selectedSectionWithStudents } = useQuery({
     queryKey: ["section", selectedSection?.id],
@@ -463,14 +335,14 @@ export const ClassesPage: React.FC = () => {
 
       <div className="bg-white rounded-lg shadow-md p-6">
         <Flex justify="between" align="center" mb="4">
-          <Filters />
+          <ClassFilters onFiltersChange={setFilters} />
           <Button color="green" onClick={() => setDialogOpen(true)}>
             <Plus size={16} /> Add Class/Section
           </Button>
         </Flex>
 
         <ClassesTable
-          data={sections}
+          data={filteredSections}
           onEdit={handleEditSection}
           onDelete={handleDeleteSection}
           onViewStudents={handleViewStudents}
@@ -478,12 +350,12 @@ export const ClassesPage: React.FC = () => {
 
         <Flex justify="between" align="center" mt="4">
           <div className="text-sm text-gray-500">
-            Showing {sections.length} entries
+            Showing {filteredSections.length} entries
           </div>
         </Flex>
       </div>
 
-      <AddClassDialog
+      <ClassFormDialog
         open={dialogOpen}
         onOpenChange={(open) => {
           setDialogOpen(open);

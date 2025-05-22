@@ -8,29 +8,33 @@ import {
   Webcam,
   MessageSquare,
   Database,
+  ArrowRight,
 } from "lucide-react";
-import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { useDashboardService } from "@/services/dashboard.service";
+import { useAttendanceService } from "@/services/attendance.service";
+import { WEB_ROUTES } from "@/constants";
+import { AttendanceTable } from "@/components/modules/attendance/AttendanceTable";
 
 type StatCardProps = {
   title: string;
   value: number;
   icon: React.ReactNode;
   color: string;
+  link?: string;
 };
 
-type AttendanceLog = {
-  id: string;
-  type: "time-in" | "time-out";
-  timeIn: Date | null;
-  timeOut: Date | null;
-  studentName: string;
-  studentClass: string;
-  status: "Recorded";
-  recordedAt: Date;
-};
-
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => (
-  <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${color}`}>
+const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  icon,
+  color,
+  link,
+}) => (
+  <div
+    className={`bg-white rounded-lg shadow-md p-6 pb-10 border-l-4 ${color} relative`}
+  >
     <Flex justify="between" align="center">
       <div>
         <p className="text-gray-500 text-sm font-medium">{title}</p>
@@ -38,306 +42,58 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => (
       </div>
       <div className="bg-gray-100 p-3 rounded-full">{icon}</div>
     </Flex>
-  </div>
-);
-
-const AttendanceTable: React.FC<{ logs: AttendanceLog[] }> = ({ logs }) => (
-  <div className="overflow-hidden">
-    <table className="min-w-full bg-white rounded-lg">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-            Type
-          </th>
-          <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-            Time-in at
-          </th>
-          <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-            Time-out at
-          </th>
-          <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-            Student Name
-          </th>
-          <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-            Student Class
-          </th>
-          <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-            Status
-          </th>
-          <th className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-            Recorded at
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-200 overflow-y-auto">
-        {logs.map((log) => (
-          <tr key={log.id} className="hover:bg-gray-50">
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-              <span
-                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                  log.type === "time-in"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-orange-100 text-orange-800"
-                }`}
-              >
-                {log.type === "time-in" ? "IN" : "OUT"}
-              </span>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {log.timeIn ? format(log.timeIn, "MMM d, yyyy h:mm a") : "-"}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {log.timeOut ? format(log.timeOut, "MMM d, yyyy h:mm a") : "-"}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {log.studentName}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {log.studentClass}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                {log.status}
-              </span>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {format(log.recordedAt, "MMM d, yyyy h:mm a")}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    {link && (
+      <Link
+        to={link}
+        className="absolute bottom-2 right-3 text-sm text-blue-500 hover:text-blue-700 hover:underline flex items-center gap-1"
+      >
+        View Details <ArrowRight size={14} />
+      </Link>
+    )}
   </div>
 );
 
 export const OverviewPage: React.FC = () => {
+  const { getDashboardStats } = useDashboardService();
+  const { getAttendanceLogs } = useAttendanceService();
+
+  const { data: dashboardStats, isLoading: isStatsLoading } = useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: getDashboardStats,
+  });
+
+  const { data: attendanceLogs = [], isLoading: isLogsLoading } = useQuery({
+    queryKey: ["attendance-logs"],
+    queryFn: getAttendanceLogs,
+  });
+
   const stats = [
     {
       title: "Total Students",
-      value: 250,
+      value: dashboardStats?.total_students ?? 0,
       icon: <Users size={24} className="text-blue-600" />,
       color: "border-blue-600",
+      link: WEB_ROUTES.DASHBOARD_STUDENTS,
     },
     {
       title: "Total Classes",
-      value: 12,
+      value: dashboardStats?.total_sections ?? 0,
       icon: <BookOpen size={24} className="text-green-600" />,
       color: "border-green-600",
+      link: WEB_ROUTES.DASHBOARD_CLASSES,
     },
     {
       title: "Attendance Entries",
-      value: 1250,
+      value: dashboardStats?.total_user_roles ?? 0,
       icon: <ClipboardCheck size={24} className="text-purple-600" />,
       color: "border-purple-600",
+      link: WEB_ROUTES.DASHBOARD_ATTENDANCE_REPORTS,
     },
     {
       title: "Admin Accounts",
-      value: 5,
+      value: dashboardStats?.total_users ?? 0,
       icon: <UserCog size={24} className="text-orange-600" />,
       color: "border-orange-600",
-    },
-  ];
-
-  const attendanceLogs: AttendanceLog[] = [
-    {
-      id: "1",
-      type: "time-in",
-      timeIn: new Date(),
-      timeOut: null,
-      studentName: "John Doe",
-      studentClass: "Grade 10-A",
-      status: "Recorded",
-      recordedAt: new Date(),
-    },
-    {
-      id: "2",
-      type: "time-out",
-      timeIn: new Date(Date.now() - 8 * 60 * 60 * 1000),
-      timeOut: new Date(),
-      studentName: "Jane Smith",
-      studentClass: "Grade 11-B",
-      status: "Recorded",
-      recordedAt: new Date(),
-    },
-    {
-      id: "3",
-      type: "time-in",
-      timeIn: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      timeOut: null,
-      studentName: "Michael Johnson",
-      studentClass: "Grade 12-A",
-      status: "Recorded",
-      recordedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    },
-    {
-      id: "4",
-      type: "time-out",
-      timeIn: new Date(Date.now() - 7 * 60 * 60 * 1000),
-      timeOut: new Date(),
-      studentName: "Emily Brown",
-      studentClass: "Grade 10-C",
-      status: "Recorded",
-      recordedAt: new Date(),
-    },
-    {
-      id: "5",
-      type: "time-in",
-      timeIn: new Date(Date.now() - 1 * 60 * 60 * 1000),
-      timeOut: null,
-      studentName: "William Davis",
-      studentClass: "Grade 11-A",
-      status: "Recorded",
-      recordedAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    },
-    {
-      id: "6",
-      type: "time-in",
-      timeIn: new Date(Date.now() - 3 * 60 * 60 * 1000),
-      timeOut: null,
-      studentName: "Sophia Wilson",
-      studentClass: "Grade 12-B",
-      status: "Recorded",
-      recordedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    },
-    {
-      id: "7",
-      type: "time-out",
-      timeIn: new Date(Date.now() - 6 * 60 * 60 * 1000),
-      timeOut: new Date(),
-      studentName: "Oliver Taylor",
-      studentClass: "Grade 10-B",
-      status: "Recorded",
-      recordedAt: new Date(),
-    },
-    {
-      id: "8",
-      type: "time-in",
-      timeIn: new Date(Date.now() - 4 * 60 * 60 * 1000),
-      timeOut: null,
-      studentName: "Emma Anderson",
-      studentClass: "Grade 11-C",
-      status: "Recorded",
-      recordedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    },
-    {
-      id: "9",
-      type: "time-out",
-      timeIn: new Date(Date.now() - 5 * 60 * 60 * 1000),
-      timeOut: new Date(),
-      studentName: "Lucas Martinez",
-      studentClass: "Grade 12-C",
-      status: "Recorded",
-      recordedAt: new Date(),
-    },
-    {
-      id: "10",
-      type: "time-in",
-      timeIn: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      timeOut: null,
-      studentName: "Ava Thompson",
-      studentClass: "Grade 10-A",
-      status: "Recorded",
-      recordedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    },
-    {
-      id: "11",
-      type: "time-out",
-      timeIn: new Date(Date.now() - 7 * 60 * 60 * 1000),
-      timeOut: new Date(),
-      studentName: "Ethan White",
-      studentClass: "Grade 11-B",
-      status: "Recorded",
-      recordedAt: new Date(),
-    },
-    {
-      id: "12",
-      type: "time-in",
-      timeIn: new Date(Date.now() - 3 * 60 * 60 * 1000),
-      timeOut: null,
-      studentName: "Isabella Clark",
-      studentClass: "Grade 12-A",
-      status: "Recorded",
-      recordedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    },
-    {
-      id: "13",
-      type: "time-out",
-      timeIn: new Date(Date.now() - 6 * 60 * 60 * 1000),
-      timeOut: new Date(),
-      studentName: "Mason Lee",
-      studentClass: "Grade 10-C",
-      status: "Recorded",
-      recordedAt: new Date(),
-    },
-    {
-      id: "14",
-      type: "time-in",
-      timeIn: new Date(Date.now() - 1 * 60 * 60 * 1000),
-      timeOut: null,
-      studentName: "Sophie Turner",
-      studentClass: "Grade 11-A",
-      status: "Recorded",
-      recordedAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    },
-    {
-      id: "15",
-      type: "time-out",
-      timeIn: new Date(Date.now() - 8 * 60 * 60 * 1000),
-      timeOut: new Date(),
-      studentName: "Alexander Scott",
-      studentClass: "Grade 12-B",
-      status: "Recorded",
-      recordedAt: new Date(),
-    },
-    {
-      id: "16",
-      type: "time-in",
-      timeIn: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      timeOut: null,
-      studentName: "Mia Rodriguez",
-      studentClass: "Grade 10-B",
-      status: "Recorded",
-      recordedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    },
-    {
-      id: "17",
-      type: "time-out",
-      timeIn: new Date(Date.now() - 7 * 60 * 60 * 1000),
-      timeOut: new Date(),
-      studentName: "Daniel Kim",
-      studentClass: "Grade 11-C",
-      status: "Recorded",
-      recordedAt: new Date(),
-    },
-    {
-      id: "18",
-      type: "time-in",
-      timeIn: new Date(Date.now() - 3 * 60 * 60 * 1000),
-      timeOut: null,
-      studentName: "Charlotte Adams",
-      studentClass: "Grade 12-C",
-      status: "Recorded",
-      recordedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    },
-    {
-      id: "19",
-      type: "time-out",
-      timeIn: new Date(Date.now() - 6 * 60 * 60 * 1000),
-      timeOut: new Date(),
-      studentName: "Henry Garcia",
-      studentClass: "Grade 10-A",
-      status: "Recorded",
-      recordedAt: new Date(),
-    },
-    {
-      id: "20",
-      type: "time-in",
-      timeIn: new Date(Date.now() - 1 * 60 * 60 * 1000),
-      timeOut: null,
-      studentName: "Victoria Wright",
-      studentClass: "Grade 11-B",
-      status: "Recorded",
-      recordedAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
     },
   ];
 
@@ -374,22 +130,60 @@ export const OverviewPage: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat, index) => (
-          <StatCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            color={stat.color}
-          />
-        ))}
+        {isStatsLoading
+          ? Array(4)
+              .fill(0)
+              .map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-lg shadow-md p-6 animate-pulse"
+                >
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+                </div>
+              ))
+          : stats.map((stat, index) => (
+              <StatCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                color={stat.color}
+                link={stat.link}
+              />
+            ))}
       </div>
 
       {/* Attendance Logs Card */}
       <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Attendance Logs</h2>
+        <Flex justify="between" align="center" mb="4">
+          <h2 className="text-xl font-semibold">Recent Attendance Logs</h2>
+          <Link
+            to={WEB_ROUTES.DASHBOARD_ATTENDANCE_REPORTS}
+            className="text-sm text-blue-500 hover:text-blue-700 hover:underline flex items-center gap-1"
+          >
+            View All <ArrowRight size={14} />
+          </Link>
+        </Flex>
         <div className="max-h-[500px] overflow-auto rounded-lg border border-gray-200">
-          <AttendanceTable logs={attendanceLogs} />
+          {isLogsLoading ? (
+            <div className="min-h-[200px] flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading attendance logs...</p>
+              </div>
+            </div>
+          ) : attendanceLogs.length === 0 ? (
+            <div className="min-h-[200px] flex items-center justify-center">
+              <div className="text-center">
+                <div className="p-4 bg-gray-50 rounded-lg inline-block">
+                  <p className="text-gray-500">No attendance logs found</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <AttendanceTable logs={attendanceLogs} />
+          )}
         </div>
       </div>
     </div>

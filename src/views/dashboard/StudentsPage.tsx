@@ -16,6 +16,7 @@ import { DeleteConfirmationDialog } from "@/components/modules/common/delete-con
 import { StudentQRDialog } from "@/components/modules/students/student-qr-dialog";
 import { StudentAttendanceLogsDialog } from "@/components/modules/students/student-attendance-logs-dialog";
 import { QRPreviewDialog } from "@/components/modules/students/student-qr-preview-dialog";
+import { StudentExportDialog } from "@/components/modules/students/student-export-dialog";
 
 const StudentsTable: React.FC<{
   data: Student[];
@@ -244,6 +245,7 @@ export const StudentsPage: React.FC = () => {
     class: "all",
   });
   const [qrPreviewOpen, setQrPreviewOpen] = React.useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
 
   const queryClient = useQueryClient();
   const studentsService = useStudentsService();
@@ -387,6 +389,9 @@ export const StudentsPage: React.FC = () => {
             }
           />
           <Flex gap="2">
+            <Button color="blue" onClick={() => setExportDialogOpen(true)}>
+              <FileDown size={16} /> Export Students List
+            </Button>
             <Button color="blue" onClick={handleBatchExportQR}>
               <FileDown size={16} /> Batch Export QR Codes
             </Button>
@@ -490,6 +495,12 @@ export const StudentsPage: React.FC = () => {
       <QRPreviewDialog
         open={qrPreviewOpen}
         onOpenChange={setQrPreviewOpen}
+        students={filteredStudents}
+      />
+
+      <StudentExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
         students={filteredStudents}
       />
     </div>

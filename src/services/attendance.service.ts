@@ -1,16 +1,25 @@
 import { useApi } from "@/hooks/use-api.hook";
 
 export interface AttendanceLog {
-  id: string;
-  type: "time-in" | "time-out";
-  timeIn: Date | null;
-  timeOut: Date | null;
-  studentName: string;
-  studentClass: string;
-  status: "Recorded";
-  recordedAt: Date;
+  student_id: string;
+  date_recorded: string;
+  time_in: string | null;
+  time_out: string | null;
   in_status: boolean;
   out_status: boolean;
+  sms_notif_status: string;
+  created_at: string;
+  updated_at: string;
+  student: {
+    name: string;
+    guardian_name: string;
+    guardian_mobile: string | null;
+    section_id: string;
+    section: {
+      name: string;
+      grade_level: string | null;
+    };
+  };
 }
 
 export const useAttendanceService = () => {
@@ -24,7 +33,7 @@ export const useAttendanceService = () => {
   };
 
   const getAttendanceLogs = async (): Promise<AttendanceLog[]> => {
-    const response = await $baseApi.get("/attendance/logs");
+    const response = await $baseApi.get("/attendance");
     return response.data;
   };
 

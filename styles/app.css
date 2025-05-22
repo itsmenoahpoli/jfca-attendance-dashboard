@@ -1,0 +1,23 @@
+.fc .fc-button {
+  text-transform: uppercase !important;
+}
+
+.fc .fc-button-primary {
+  text-transform: uppercase !important;
+}
+
+.fc .fc-toolbar-title {
+  text-transform: uppercase !important;
+}
+
+.fc .fc-toolbar-chunk .fc-button {
+  text-transform: uppercase !important;
+}
+
+.fc .fc-toolbar-chunk .fc-button-primary {
+  text-transform: uppercase !important;
+}
+
+.fc .fc-toolbar-chunk .fc-toolbar-title {
+  text-transform: uppercase !important;
+}
