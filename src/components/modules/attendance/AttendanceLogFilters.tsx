@@ -40,7 +40,7 @@ export const AttendanceLogFilters: React.FC<AttendanceLogFiltersProps> = ({
   };
 
   const getFilterLabel = (key: keyof typeof filters, value: string) => {
-    if (value === "all") return "";
+    if (value === "all" || value === "") return "";
 
     switch (key) {
       case "yearLevel":

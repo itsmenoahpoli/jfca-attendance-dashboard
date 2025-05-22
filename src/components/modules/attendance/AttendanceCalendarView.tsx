@@ -152,6 +152,11 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
       });
 
       yPosition = (doc as any).lastAutoTable.finalY + 10;
+
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.5);
+      doc.line(margin, yPosition - 5, pageWidth - margin, yPosition - 5);
+      doc.setDrawColor(0, 0, 0);
     });
 
     doc.save(`attendance_report_${format(date, "yyyy-MM-dd")}.pdf`);
