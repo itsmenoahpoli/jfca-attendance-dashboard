@@ -368,44 +368,41 @@ export const AttendanceCalendarView: React.FC<AttendanceCalendarViewProps> = ({
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
   const [isDayDetailsOpen, setIsDayDetailsOpen] = React.useState(false);
 
-  const events = data.map((log) => ({
-    id: log.student_id,
-    title: `${log.student.name} - ${getStatus(log)}`,
-    date: new Date(log.date_recorded),
-    backgroundColor:
-      log.in_status && log.out_status
-        ? "#eab308"
-        : log.in_status && !log.out_status
-        ? "#22c55e"
-        : "#ef4444",
-    borderColor:
-      log.in_status && log.out_status
-        ? "#ca8a04"
-        : log.in_status && !log.out_status
-        ? "#16a34a"
-        : "#dc2626",
-    extendedProps: {
-      studentName: log.student.name,
-      yearLevel: log.student.section.grade_level,
-      className: log.student.section.name,
-      timeIn: log.time_in,
-      timeOut: log.time_out,
-      status: getStatus(log),
-    },
-  }));
+  const events = React.useMemo(() => {
+    const uniqueDates = new Set(
+      data.map((log) => {
+        const date = new Date(log.date_recorded);
+        return date.toISOString().split("T")[0];
+      })
+    );
+
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    const allDates = [];
+    for (
+      let d = new Date(startOfMonth);
+      d <= endOfMonth;
+      d.setDate(d.getDate() + 1)
+    ) {
+      const dateStr = d.toISOString().split("T")[0];
+      allDates.push({
+        start: dateStr,
+        display: "background",
+        backgroundColor: uniqueDates.has(dateStr) ? "#22c55e" : "#fef3c7",
+        allDay: true,
+      });
+    }
+
+    return allDates;
+  }, [data]);
 
   const handleEventClick = (info: any) => {
     const event = info.event;
     const props = event.extendedProps;
 
-    console.log("Event clicked:", {
-      studentName: props.studentName,
-      yearLevel: props.yearLevel,
-      className: props.className,
-      timeIn: props.timeIn ? format(new Date(props.timeIn), "h:mm a") : "-",
-      timeOut: props.timeOut ? format(new Date(props.timeOut), "h:mm a") : "-",
-      status: props.status,
-    });
+    console.log(props);
   };
 
   const handleDateClick = (info: any) => {
@@ -414,39 +411,43 @@ export const AttendanceCalendarView: React.FC<AttendanceCalendarViewProps> = ({
   };
 
   return (
-    <div className="h-[700px]">
-      <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "dayGridMonth,timeGridWeek,timeGridDay",
-        }}
-        events={events}
-        eventClick={handleEventClick}
-        dateClick={handleDateClick}
-        height="100%"
-        eventTimeFormat={{
-          hour: "numeric",
-          minute: "2-digit",
-          meridiem: "short",
-        }}
-        dayMaxEvents={true}
-        eventDisplay="block"
-        eventContent={(eventInfo) => {
-          return (
-            <div className="fc-content p-1">
-              <div className="text-xs font-semibold truncate">
-                {eventInfo.event.extendedProps.studentName}
-              </div>
-              <div className="text-xs opacity-75">
-                {eventInfo.event.extendedProps.status}
-              </div>
-            </div>
-          );
-        }}
-      />
+    <div className="h-[700px] w-full">
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-sm font-medium text-gray-700">Legends:</span>
+        <div className="w-4 h-4 rounded bg-[#22c55e]"></div>
+        <span className="text-sm text-gray-600">
+          Days with attendance records
+        </span>
+        <div className="w-4 h-4 rounded bg-[#fef3c7] ml-4"></div>
+        <span className="text-sm text-gray-600">
+          Days without attendance records
+        </span>
+      </div>
+
+      <div className="w-full h-full">
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
+          }}
+          events={events}
+          eventClick={handleEventClick}
+          dateClick={handleDateClick}
+          height="100%"
+          eventTimeFormat={{
+            hour: "numeric",
+            minute: "2-digit",
+            meridiem: "short",
+          }}
+          dayMaxEvents={true}
+          eventDisplay="background"
+          contentHeight="100%"
+          aspectRatio={1.35}
+        />
+      </div>
 
       <DayDetailsDialog
         open={isDayDetailsOpen}

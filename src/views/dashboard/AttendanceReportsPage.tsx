@@ -114,7 +114,10 @@ export const AttendanceReportsPage: React.FC = () => {
               </Flex>
             </Tabs.Content>
 
-            <Tabs.Content value="calendar">
+            <Tabs.Content
+              value="calendar"
+              className="pb-5 flex justify-center items-center"
+            >
               <AttendanceCalendarView data={filteredLogs} />
             </Tabs.Content>
           </div>
