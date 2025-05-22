@@ -15,6 +15,7 @@ export interface AttendanceLog {
     guardian_name: string;
     guardian_mobile: string | null;
     section_id: string;
+    profile_photo: string | null;
     section: {
       name: string;
       grade_level: string | null;

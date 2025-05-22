@@ -4,8 +4,12 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { Dialog, Flex } from "@radix-ui/themes";
+import { Dialog, Flex, Select } from "@radix-ui/themes";
 import { type AttendanceLog } from "@/services/attendance.service";
+import { FileText } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import brandLogo from "@/assets/images/brand-logo.png";
 
 interface AttendanceCalendarViewProps {
   data: AttendanceLog[];
@@ -18,12 +22,29 @@ interface DayDetailsDialogProps {
   logs: AttendanceLog[];
 }
 
+const getStatus = (log: AttendanceLog) => {
+  if (log.in_status && log.out_status) {
+    return "OUT";
+  }
+  return "PENDING/INCOMPLETE";
+};
+
+const getStatusBadgeColor = (log: AttendanceLog) => {
+  if (log.in_status && log.out_status) {
+    return "bg-green-100 text-green-800";
+  }
+  return "bg-orange-100 text-orange-800";
+};
+
 const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
   open,
   onOpenChange,
   date,
   logs,
 }) => {
+  const [selectedSection, setSelectedSection] = React.useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = React.useState<string>("all");
+
   const groupedLogs = React.useMemo(() => {
     if (!date) return {};
     const filteredLogs = logs.filter((log) => {
@@ -45,48 +66,98 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
     }, {} as Record<string, AttendanceLog[]>);
   }, [logs, date]);
 
-  const handleExport = () => {
-    if (!date || Object.keys(groupedLogs).length === 0) return;
+  const sections = React.useMemo(() => {
+    return ["all", ...Object.keys(groupedLogs)];
+  }, [groupedLogs]);
 
-    const csvContent = Object.entries(groupedLogs)
-      .map(([section, sectionLogs]) => {
-        const sectionHeader = `\nSection: ${section}\n`;
-        const headers = "Student Name,Class,Time In,Time Out,Status\n";
-        const rows = sectionLogs
-          .map((log) => {
-            const timeIn = log.time_in
-              ? format(new Date(log.time_in), "h:mm a")
-              : "-";
-            const timeOut = log.time_out
-              ? format(new Date(log.time_out), "h:mm a")
-              : "-";
-            const status =
-              log.in_status && !log.out_status
-                ? "IN"
-                : log.in_status && log.out_status
-                ? "OUT"
-                : "PENDING";
-            return `"${log.student.name}","${log.student.section.name}","${timeIn}","${timeOut}","${status}"`;
-          })
-          .join("\n");
-        return sectionHeader + headers + rows;
-      })
-      .join("\n");
+  const filteredGroupedLogs = React.useMemo(() => {
+    if (selectedSection === "all" && selectedStatus === "all") {
+      return groupedLogs;
+    }
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `attendance_logs_${format(date, "yyyy-MM-dd")}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const filtered: Record<string, AttendanceLog[]> = {};
+    Object.entries(groupedLogs).forEach(([section, logs]) => {
+      if (selectedSection !== "all" && section !== selectedSection) {
+        return;
+      }
+
+      const filteredLogs = logs.filter((log) => {
+        if (selectedStatus === "all") return true;
+        const status =
+          log.in_status && !log.out_status
+            ? "in"
+            : log.in_status && log.out_status
+            ? "out"
+            : "pending";
+        return status === selectedStatus;
+      });
+
+      if (filteredLogs.length > 0) {
+        filtered[section] = filteredLogs;
+      }
+    });
+
+    return filtered;
+  }, [groupedLogs, selectedSection, selectedStatus]);
+
+  const handleExport = async () => {
+    if (!date || Object.keys(filteredGroupedLogs).length === 0) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 10;
+
+    const logoBase64 = await getLogoBase64(brandLogo);
+    addHeader(doc, logoBase64, pageWidth);
+
+    let yPosition = 40;
+
+    doc.setFontSize(16);
+    doc.text("Attendance Report", pageWidth / 2, yPosition, {
+      align: "center",
+    });
+    yPosition += 10;
+
+    doc.setFontSize(12);
+    doc.text(format(date, "MMMM d, yyyy"), pageWidth / 2, yPosition, {
+      align: "center",
+    });
+    yPosition += 15;
+
+    Object.entries(filteredGroupedLogs).forEach(([section, sectionLogs]) => {
+      if (yPosition > doc.internal.pageSize.getHeight() - 20) {
+        doc.addPage();
+        addHeader(doc, logoBase64, pageWidth);
+        yPosition = 40;
+      }
+
+      doc.setFontSize(14);
+      doc.text(section, margin, yPosition);
+      yPosition += 10;
+
+      const tableData = sectionLogs.map((log) => [
+        log.student.name,
+        log.time_in ? format(new Date(log.time_in), "h:mm a") : "-",
+        log.time_out ? format(new Date(log.time_out), "h:mm a") : "-",
+        getStatus(log),
+      ]);
+
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Student Name", "Time In", "Time Out", "Status"]],
+        body: tableData,
+        margin: { left: margin, right: margin },
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [41, 128, 185] },
+      });
+
+      yPosition = (doc as any).lastAutoTable.finalY + 10;
+    });
+
+    doc.save(`attendance_report_${format(date, "yyyy-MM-dd")}.pdf`);
   };
 
-  const totalLogs = Object.values(groupedLogs).reduce(
+  const totalLogs = Object.values(filteredGroupedLogs).reduce(
     (sum, logs) => sum + logs.length,
     0
   );
@@ -94,12 +165,44 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content className="!w-[90vw] !max-w-[90vw]">
-        <Dialog.Title>
-          Attendance Logs - {date ? format(date, "MMMM d, yyyy") : ""}
-        </Dialog.Title>
-        <Dialog.Description className="text-gray-500 mb-4">
-          View attendance logs for this day.
-        </Dialog.Description>
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <Dialog.Title>
+              Attendance Logs - {date ? format(date, "MMMM d, yyyy") : ""}
+            </Dialog.Title>
+            <Dialog.Description className="text-gray-500">
+              View attendance logs for this day.
+            </Dialog.Description>
+          </div>
+          <div className="flex gap-4">
+            <Select.Root
+              value={selectedSection}
+              onValueChange={setSelectedSection}
+            >
+              <Select.Trigger placeholder="Select Section" />
+              <Select.Content>
+                {sections.map((section) => (
+                  <Select.Item key={section} value={section}>
+                    {section === "all" ? "All Sections" : section}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+
+            <Select.Root
+              value={selectedStatus}
+              onValueChange={setSelectedStatus}
+            >
+              <Select.Trigger placeholder="Select Status" />
+              <Select.Content>
+                <Select.Item value="all">All Status</Select.Item>
+                <Select.Item value="in">In</Select.Item>
+                <Select.Item value="out">Out</Select.Item>
+                <Select.Item value="pending">Pending/Incomplete</Select.Item>
+              </Select.Content>
+            </Select.Root>
+          </div>
+        </div>
 
         <div className="mt-4">
           {totalLogs === 0 ? (
@@ -114,74 +217,91 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
             </div>
           ) : (
             <div className="space-y-6">
-              {Object.entries(groupedLogs).map(([section, sectionLogs]) => (
-                <div key={section} className="bg-white rounded-lg shadow">
-                  <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {section}
-                    </h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Student Name
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Time In
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Time Out
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {sectionLogs.map((log) => (
-                          <tr
-                            key={`${log.student_id}-${log.date_recorded}`}
-                            className="hover:bg-gray-50"
-                          >
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {log.student.name}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {log.time_in
-                                ? format(new Date(log.time_in), "h:mm a")
-                                : "-"}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {log.time_out
-                                ? format(new Date(log.time_out), "h:mm a")
-                                : "-"}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span
-                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                  log.in_status && !log.out_status
-                                    ? "bg-green-100 text-green-800"
-                                    : log.in_status && log.out_status
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-red-100 text-red-800"
-                                }`}
-                              >
-                                {log.in_status && !log.out_status
-                                  ? "IN"
-                                  : log.in_status && log.out_status
-                                  ? "OUT"
-                                  : "PENDING"}
-                              </span>
-                            </td>
+              {Object.entries(filteredGroupedLogs).map(
+                ([section, sectionLogs]) => (
+                  <div key={section} className="bg-white rounded-lg shadow">
+                    <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                      <h3 className="text-lg font-medium text-gray-900">
+                        {section}
+                      </h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Student
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Time In
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Time Out
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Status
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {sectionLogs.map((log) => (
+                            <tr
+                              key={`${log.student_id}-${log.date_recorded}`}
+                              className="hover:bg-gray-50"
+                            >
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center">
+                                  <div className="h-10 w-10 flex-shrink-0">
+                                    {log.student.profile_photo ? (
+                                      <img
+                                        src={log.student.profile_photo}
+                                        alt={log.student.name}
+                                        className="h-10 w-10 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <span className="text-sm font-medium text-blue-600">
+                                          {log.student.name
+                                            .charAt(0)
+                                            .toUpperCase()}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="ml-4">
+                                    <div className="text-sm font-medium text-gray-900">
+                                      {log.student.name}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {log.time_in
+                                  ? format(new Date(log.time_in), "h:mm a")
+                                  : "-"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {log.time_out
+                                  ? format(new Date(log.time_out), "h:mm a")
+                                  : "-"}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span
+                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
+                                    log
+                                  )}`}
+                                >
+                                  {getStatus(log)}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
           )}
         </div>
@@ -190,9 +310,10 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
           {totalLogs > 0 && (
             <button
               onClick={handleExport}
-              className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100"
+              className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 flex items-center gap-2"
             >
-              Export Daily Report (Today)
+              <FileText size={16} />
+              Export Daily Report (PDF)
             </button>
           )}
           <Dialog.Close>
@@ -206,6 +327,41 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
   );
 };
 
+const getLogoBase64 = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.crossOrigin = "Anonymous";
+    img.onload = function () {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } else {
+        reject();
+      }
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+};
+
+const addHeader = (doc: jsPDF, logoBase64: string, pageWidth: number) => {
+  const logoSize = 16;
+  const margin = 10;
+  doc.addImage(logoBase64, "PNG", margin, 8, logoSize, logoSize);
+  doc.setFontSize(14);
+  doc.text("JUBILEE CHRISTIAN FAITH ACADEMY", margin + logoSize + 6, 16);
+  doc.setFontSize(10);
+  doc.text("Imus, Cavite", margin + logoSize + 6, 22);
+  doc.setLineWidth(0.5);
+  doc.setDrawColor(200, 200, 200);
+  doc.line(margin, 26, pageWidth - margin, 26);
+  doc.setDrawColor(0, 0, 0);
+};
+
 export const AttendanceCalendarView: React.FC<AttendanceCalendarViewProps> = ({
   data,
 }) => {
@@ -214,25 +370,19 @@ export const AttendanceCalendarView: React.FC<AttendanceCalendarViewProps> = ({
 
   const events = data.map((log) => ({
     id: log.student_id,
-    title: `${log.student.name} - ${
-      log.in_status && !log.out_status
-        ? "IN"
-        : log.in_status && log.out_status
-        ? "OUT"
-        : "PENDING"
-    }`,
+    title: `${log.student.name} - ${getStatus(log)}`,
     date: new Date(log.date_recorded),
     backgroundColor:
-      log.in_status && !log.out_status
-        ? "#22c55e"
-        : log.in_status && log.out_status
+      log.in_status && log.out_status
         ? "#eab308"
+        : log.in_status && !log.out_status
+        ? "#22c55e"
         : "#ef4444",
     borderColor:
-      log.in_status && !log.out_status
-        ? "#16a34a"
-        : log.in_status && log.out_status
+      log.in_status && log.out_status
         ? "#ca8a04"
+        : log.in_status && !log.out_status
+        ? "#16a34a"
         : "#dc2626",
     extendedProps: {
       studentName: log.student.name,
@@ -240,12 +390,7 @@ export const AttendanceCalendarView: React.FC<AttendanceCalendarViewProps> = ({
       className: log.student.section.name,
       timeIn: log.time_in,
       timeOut: log.time_out,
-      status:
-        log.in_status && !log.out_status
-          ? "IN"
-          : log.in_status && log.out_status
-          ? "OUT"
-          : "PENDING",
+      status: getStatus(log),
     },
   }));
 
