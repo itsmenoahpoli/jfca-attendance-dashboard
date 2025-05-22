@@ -24,9 +24,9 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
   date,
   logs,
 }) => {
-  const filteredLogs = React.useMemo(() => {
-    if (!date) return [];
-    return logs.filter((log) => {
+  const groupedLogs = React.useMemo(() => {
+    if (!date) return {};
+    const filteredLogs = logs.filter((log) => {
       const logDate = new Date(log.date_recorded);
       return (
         logDate.getFullYear() === date.getFullYear() &&
@@ -34,12 +34,8 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
         logDate.getDate() === date.getDate()
       );
     });
-  }, [logs, date]);
 
-  const handleExport = () => {
-    if (!date || filteredLogs.length === 0) return;
-
-    const groupedLogs = filteredLogs.reduce((acc, log) => {
+    return filteredLogs.reduce((acc, log) => {
       const sectionName = log.student.section.name;
       if (!acc[sectionName]) {
         acc[sectionName] = [];
@@ -47,6 +43,10 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
       acc[sectionName].push(log);
       return acc;
     }, {} as Record<string, AttendanceLog[]>);
+  }, [logs, date]);
+
+  const handleExport = () => {
+    if (!date || Object.keys(groupedLogs).length === 0) return;
 
     const csvContent = Object.entries(groupedLogs)
       .map(([section, sectionLogs]) => {
@@ -86,6 +86,11 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
     document.body.removeChild(link);
   };
 
+  const totalLogs = Object.values(groupedLogs).reduce(
+    (sum, logs) => sum + logs.length,
+    0
+  );
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content className="!w-[90vw] !max-w-[90vw]">
@@ -97,7 +102,7 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
         </Dialog.Description>
 
         <div className="mt-4">
-          {filteredLogs.length === 0 ? (
+          {totalLogs === 0 ? (
             <div className="min-h-[200px] flex items-center justify-center">
               <div className="text-center">
                 <div className="p-4 bg-gray-50 rounded-lg inline-block">
@@ -108,76 +113,81 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Student Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Class
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Time In
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Time Out
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredLogs.map((log) => (
-                    <tr
-                      key={`${log.student_id}-${log.date_recorded}`}
-                      className="hover:bg-gray-50"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {log.student.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {log.student.section.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {log.time_in
-                          ? format(new Date(log.time_in), "h:mm a")
-                          : "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {log.time_out
-                          ? format(new Date(log.time_out), "h:mm a")
-                          : "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            log.in_status && !log.out_status
-                              ? "bg-green-100 text-green-800"
-                              : log.in_status && log.out_status
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {log.in_status && !log.out_status
-                            ? "IN"
-                            : log.in_status && log.out_status
-                            ? "OUT"
-                            : "PENDING"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-6">
+              {Object.entries(groupedLogs).map(([section, sectionLogs]) => (
+                <div key={section} className="bg-white rounded-lg shadow">
+                  <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      {section}
+                    </h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Student Name
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Time In
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Time Out
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {sectionLogs.map((log) => (
+                          <tr
+                            key={`${log.student_id}-${log.date_recorded}`}
+                            className="hover:bg-gray-50"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {log.student.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {log.time_in
+                                ? format(new Date(log.time_in), "h:mm a")
+                                : "-"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {log.time_out
+                                ? format(new Date(log.time_out), "h:mm a")
+                                : "-"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  log.in_status && !log.out_status
+                                    ? "bg-green-100 text-green-800"
+                                    : log.in_status && log.out_status
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-red-100 text-red-800"
+                                }`}
+                              >
+                                {log.in_status && !log.out_status
+                                  ? "IN"
+                                  : log.in_status && log.out_status
+                                  ? "OUT"
+                                  : "PENDING"}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
         <Flex gap="3" mt="4" justify="end">
-          {filteredLogs.length > 0 && (
+          {totalLogs > 0 && (
             <button
               onClick={handleExport}
               className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100"
