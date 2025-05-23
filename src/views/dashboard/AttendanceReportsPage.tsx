@@ -125,9 +125,9 @@ export const AttendanceReportsPage: React.FC = () => {
         log.time_in ? format(new Date(log.time_in), "h:mm a") : "-",
         log.time_out ? format(new Date(log.time_out), "h:mm a") : "-",
         log.in_status && !log.out_status
-          ? "Present"
+          ? "Pending/Incomplete"
           : log.in_status && log.out_status
-          ? "Late"
+          ? "Present"
           : "Absent",
       ]);
 
@@ -151,8 +151,52 @@ export const AttendanceReportsPage: React.FC = () => {
     doc.save(`daily_attendance_report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
   };
 
-  const handleExportReport = () => {
-    console.log("Exporting full report...");
+  const handleExportReport = async () => {
+    if (filteredLogs.length === 0) return;
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 10;
+
+    const logoBase64 = await getLogoBase64(brandLogo);
+    addHeader(doc, logoBase64, pageWidth);
+
+    let yPosition = 40;
+
+    doc.setFontSize(16);
+    doc.text("Attendance Report", pageWidth / 2, yPosition, {
+      align: "center",
+    });
+    yPosition += 10;
+
+    doc.setFontSize(12);
+    doc.text(format(new Date(), "MMMM d, yyyy"), pageWidth / 2, yPosition, {
+      align: "center",
+    });
+    yPosition += 15;
+
+    const tableData = filteredLogs.map((log) => [
+      log.student.name,
+      log.student.section.name,
+      log.time_in ? format(new Date(log.time_in), "h:mm a") : "-",
+      log.time_out ? format(new Date(log.time_out), "h:mm a") : "-",
+      log.in_status && !log.out_status
+        ? "Pending/Incomplete"
+        : log.in_status && log.out_status
+        ? "Present"
+        : "Absent",
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Student Name", "Section", "Time In", "Time Out", "Status"]],
+      body: tableData,
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    doc.save(`attendance_report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
   };
 
   const filteredLogs = React.useMemo(() => {
