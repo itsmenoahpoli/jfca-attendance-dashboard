@@ -1,5 +1,5 @@
 import React from "react";
-import { Tabs, Flex, Button } from "@radix-ui/themes";
+import { Tabs, Flex, Button, Dialog, TextField } from "@radix-ui/themes";
 import { Download, FileText } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
@@ -12,11 +12,83 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import brandLogo from "@/assets/images/brand-logo.png";
 
+const ExportConfirmationDialog: React.FC<{
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (dateRange: { from: string; to: string }) => void;
+}> = ({ open, onOpenChange, onConfirm }) => {
+  const [dateRange, setDateRange] = React.useState({
+    from: format(new Date(), "yyyy-MM-dd"),
+    to: format(new Date(), "yyyy-MM-dd"),
+  });
+
+  const handleConfirm = () => {
+    onConfirm(dateRange);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Content className="max-w-md">
+        <Dialog.Title>Export Attendance Report</Dialog.Title>
+        <Dialog.Description className="text-gray-500 mb-4">
+          Select the date range for the report
+        </Dialog.Description>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              From Date
+            </label>
+            <TextField.Root
+              type="date"
+              value={dateRange.from}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setDateRange((prev) => ({ ...prev, from: e.target.value }))
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            ></TextField.Root>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              To Date
+            </label>
+            <TextField.Root
+              type="date"
+              value={dateRange.to}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setDateRange((prev) => ({ ...prev, to: e.target.value }))
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            ></TextField.Root>
+          </div>
+        </div>
+
+        <Flex gap="3" mt="4" justify="end">
+          <Dialog.Close>
+            <Button variant="soft" color="gray">
+              Cancel
+            </Button>
+          </Dialog.Close>
+          <Button color="blue" onClick={handleConfirm}>
+            Export Report
+          </Button>
+        </Flex>
+      </Dialog.Content>
+    </Dialog.Root>
+  );
+};
+
 export const AttendanceReportsPage: React.FC = () => {
   const { getAttendanceLogs } = useAttendanceService();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab =
     searchParams.get("view") === "calendar" ? "calendar" : "list";
+  const [exportDialogOpen, setExportDialogOpen] = React.useState(false);
+  const [dateRange, setDateRange] = React.useState<{
+    start_date?: string;
+    end_date?: string;
+  }>({});
 
   const [filters, setFilters] = React.useState({
     search: "",
@@ -26,8 +98,8 @@ export const AttendanceReportsPage: React.FC = () => {
   });
 
   const { data: attendanceLogs = [], isLoading } = useQuery({
-    queryKey: ["attendance-logs"],
-    queryFn: getAttendanceLogs,
+    queryKey: ["attendance-logs", dateRange],
+    queryFn: () => getAttendanceLogs(dateRange),
   });
 
   const handleTabChange = (value: string) => {
@@ -151,7 +223,10 @@ export const AttendanceReportsPage: React.FC = () => {
     doc.save(`daily_attendance_report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
   };
 
-  const handleExportReport = async () => {
+  const handleExportReport = async (dateRange: {
+    from: string;
+    to: string;
+  }) => {
     if (filteredLogs.length === 0) return;
 
     const doc = new jsPDF();
@@ -170,9 +245,17 @@ export const AttendanceReportsPage: React.FC = () => {
     yPosition += 10;
 
     doc.setFontSize(12);
-    doc.text(format(new Date(), "MMMM d, yyyy"), pageWidth / 2, yPosition, {
-      align: "center",
-    });
+    doc.text(
+      `${format(new Date(dateRange.from), "MMMM d, yyyy")} - ${format(
+        new Date(dateRange.to),
+        "MMMM d, yyyy"
+      )}`,
+      pageWidth / 2,
+      yPosition,
+      {
+        align: "center",
+      }
+    );
     yPosition += 15;
 
     const tableData = filteredLogs.map((log) => [
@@ -196,7 +279,12 @@ export const AttendanceReportsPage: React.FC = () => {
       headStyles: { fillColor: [41, 128, 185] },
     });
 
-    doc.save(`attendance_report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    doc.save(
+      `attendance_report_${format(
+        new Date(dateRange.from),
+        "yyyy-MM-dd"
+      )}_${format(new Date(dateRange.to), "yyyy-MM-dd")}.pdf`
+    );
   };
 
   const filteredLogs = React.useMemo(() => {
@@ -245,7 +333,7 @@ export const AttendanceReportsPage: React.FC = () => {
             <Button color="blue" onClick={handleExportDaily}>
               <FileText size={16} className="mr-2" /> Daily PDF
             </Button>
-            <Button color="green" onClick={handleExportReport}>
+            <Button color="green" onClick={() => setExportDialogOpen(true)}>
               <Download size={16} className="mr-2" /> Export Report
             </Button>
           </Flex>
@@ -295,6 +383,18 @@ export const AttendanceReportsPage: React.FC = () => {
           </div>
         </Tabs.Root>
       </div>
+
+      <ExportConfirmationDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        onConfirm={(dateRange) => {
+          setDateRange({
+            start_date: dateRange.from,
+            end_date: dateRange.to,
+          });
+          handleExportReport(dateRange);
+        }}
+      />
     </div>
   );
 };

@@ -23,6 +23,11 @@ export interface AttendanceLog {
   };
 }
 
+interface DateRangeParams {
+  start_date?: string;
+  end_date?: string;
+}
+
 export const useAttendanceService = () => {
   const { $baseApi } = useApi();
 
@@ -33,8 +38,10 @@ export const useAttendanceService = () => {
     return response.data;
   };
 
-  const getAttendanceLogs = async (): Promise<AttendanceLog[]> => {
-    const response = await $baseApi.get("/attendance");
+  const getAttendanceLogs = async (
+    params?: DateRangeParams
+  ): Promise<AttendanceLog[]> => {
+    const response = await $baseApi.get("/attendance", { params });
     return response.data;
   };
 
