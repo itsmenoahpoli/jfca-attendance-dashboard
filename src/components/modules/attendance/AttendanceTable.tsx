@@ -17,7 +17,8 @@ export const AttendanceTable: React.FC<{ logs: AttendanceLog[] }> = ({
     }
   };
 
-  const splitName = (fullName: string) => {
+  const splitName = (fullName: string | null | undefined) => {
+    if (!fullName) return { firstName: "", middleName: "", lastName: "" };
     const parts = fullName.split(" ");
     return {
       firstName: parts[0] || "",
@@ -63,7 +64,7 @@ export const AttendanceTable: React.FC<{ logs: AttendanceLog[] }> = ({
         <tbody className="divide-y divide-gray-200 overflow-y-auto">
           {logs.map((log) => {
             const { firstName, middleName, lastName } = splitName(
-              log.student.name
+              log.student?.name
             );
             return (
               <tr key={log.student_id} className="hover:bg-gray-50">
@@ -100,7 +101,7 @@ export const AttendanceTable: React.FC<{ logs: AttendanceLog[] }> = ({
                   {lastName}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {log.student.section.name}
+                  {log.student?.section?.name || "-"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
@@ -110,7 +111,7 @@ export const AttendanceTable: React.FC<{ logs: AttendanceLog[] }> = ({
                         : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
-                    {log.sms_notif_status.toUpperCase()}
+                    {log.sms_notif_status?.toUpperCase() || "PENDING"}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
