@@ -210,6 +210,30 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
     onOpenChange(open);
   };
 
+  const handleAddStudent = (data: StudentProfileFormData) => {
+    const apiData = {
+      first_name: data.first_name,
+      middle_name: data.middle_name,
+      last_name: data.last_name,
+      email: data.email,
+      gender: data.gender,
+      contact: data.contact,
+      guardian_name: data.guardian_name,
+      guardian_relation: data.guardian_relation,
+      guardian_mobile_number: data.guardian_mobile_number,
+      section_id: section?.id || data.section,
+      leftSideImage: data.leftSideImage,
+      frontSideImage: data.frontSideImage,
+      rightSideImage: data.rightSideImage,
+    };
+
+    if (section) {
+      onSubmit(data);
+    } else {
+      onSubmit(data);
+    }
+  };
+
   return (
     <Dialog.Root open={open} onOpenChange={handleDialogClose}>
       <Dialog.Content className="max-w-md">

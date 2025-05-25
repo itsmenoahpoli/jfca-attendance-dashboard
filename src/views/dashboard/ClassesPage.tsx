@@ -409,6 +409,14 @@ export const ClassesPage: React.FC = () => {
         }}
         sectionName={selectedSection?.name || ""}
         section={selectedSectionWithStudents}
+        onImportSuccess={async () => {
+          if (selectedSection) {
+            const updatedSection = await sectionsService.getSection(
+              selectedSection.id
+            );
+            setSelectedSection(updatedSection);
+          }
+        }}
       />
     </div>
   );

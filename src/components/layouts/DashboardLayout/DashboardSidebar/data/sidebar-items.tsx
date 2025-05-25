@@ -1,4 +1,4 @@
-import { Command } from "lucide-react";
+import { Command, Users } from "lucide-react";
 import { WEB_ROUTES } from "@/constants";
 import { type SidebarGroup } from "@@types/layout";
 
@@ -29,27 +29,11 @@ export const SIDEBAR_ITEMS: SidebarGroup[] = [
         url: WEB_ROUTES.DASHBOARD_ATTENDANCE_REPORTS,
         icon: <Command className="text-green-200" size={ICON_SIZE} />,
       },
-      // {
-      //   label: "Data Management",
-      //   icon: <Activity className="text-green-200" size={ICON_SIZE} />,
-      //   children: [
-      //     {
-      //       label: "Manage Sections/Classes",
-      //       url: "",
-      //       icon: <SquarePen className="text-green-200" size={SUB_ICON_SIZE} />,
-      //     },
-      //     {
-      //       label: "Manage Students",
-      //       url: "",
-      //       icon: <SquarePen className="text-green-200" size={SUB_ICON_SIZE} />,
-      //     },
-      //     {
-      //       label: "Manage Attendance Reports",
-      //       url: "",
-      //       icon: <SquarePen className="text-green-200" size={SUB_ICON_SIZE} />,
-      //     },
-      //   ],
-      // },
+      {
+        label: "User Management",
+        url: WEB_ROUTES.DASHBOARD_USERS,
+        icon: <Users className="text-green-200" size={ICON_SIZE} />,
+      },
     ],
   },
 ] as const;

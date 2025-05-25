@@ -22,6 +22,7 @@ interface StudentsListDialogProps {
   onOpenChange: (open: boolean) => void;
   sectionName: string;
   section: Section | undefined;
+  onImportSuccess?: () => void;
 }
 
 export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
@@ -29,6 +30,7 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
   onOpenChange,
   sectionName,
   section,
+  onImportSuccess,
 }) => {
   const [addStudentDialogOpen, setAddStudentDialogOpen] = React.useState(false);
   const [selectedStudent, setSelectedStudent] = React.useState<
@@ -294,19 +296,21 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
                           {student.images?.facefront ? (
                             <img
                               src={student.images.facefront}
-                              alt={student.name}
+                              alt={`${student.first_name} ${student.last_name}`}
                               className="w-16 h-16 rounded-full object-cover"
                             />
                           ) : (
                             <Avatar
-                              fallback={student.name.charAt(0).toUpperCase()}
+                              fallback={student.first_name
+                                .charAt(0)
+                                .toUpperCase()}
                               size="5"
                               radius="full"
                             />
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {student.name}
+                          {`${student.first_name} ${student.middle_name} ${student.last_name}`.trim()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {student.email}
@@ -389,7 +393,11 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
           }
         }}
         onConfirm={handleConfirmDelete}
-        sectionName={selectedStudent ? selectedStudent.name : ""}
+        sectionName={
+          selectedStudent
+            ? `${selectedStudent.first_name} ${selectedStudent.last_name}`.trim()
+            : ""
+        }
       />
 
       <StudentQRDialog
@@ -407,6 +415,7 @@ export const StudentsListDialog: React.FC<StudentsListDialogProps> = ({
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
         sectionId={section?.id || ""}
+        onImportSuccess={onImportSuccess}
       />
     </Dialog.Root>
   );

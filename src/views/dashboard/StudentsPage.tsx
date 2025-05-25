@@ -103,19 +103,19 @@ const StudentsTable: React.FC<{
               {item.images?.facefront ? (
                 <img
                   src={item.images.facefront}
-                  alt={item.name}
+                  alt={item.first_name}
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                   <span className="text-sm font-medium text-blue-600">
-                    {item.name.charAt(0).toUpperCase()}
+                    {item.first_name.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 align-middle">
-              {item.name}
+              {`${item.first_name} ${item.middle_name} ${item.last_name}`.trim()}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 align-middle">
               {item.student_key}
@@ -301,7 +301,9 @@ export const StudentsPage: React.FC = () => {
 
   const handleAddStudent = (data: StudentProfileFormData) => {
     const apiData = {
-      name: data.name,
+      first_name: data.first_name,
+      middle_name: data.middle_name,
+      last_name: data.last_name,
       email: data.email,
       gender: data.gender,
       contact: data.contact,
@@ -347,7 +349,7 @@ export const StudentsPage: React.FC = () => {
 
   const filteredStudents = React.useMemo(() => {
     return students.filter((student) => {
-      const matchesSearch = student.name
+      const matchesSearch = student.first_name
         .toLowerCase()
         .includes(filters.search.toLowerCase());
       const matchesYearLevel =
@@ -467,7 +469,11 @@ export const StudentsPage: React.FC = () => {
           }
         }}
         onConfirm={handleConfirmDelete}
-        sectionName={selectedStudent ? selectedStudent.name : ""}
+        sectionName={
+          selectedStudent
+            ? `${selectedStudent.first_name} ${selectedStudent.middle_name} ${selectedStudent.last_name}`.trim()
+            : ""
+        }
       />
 
       <StudentQRDialog

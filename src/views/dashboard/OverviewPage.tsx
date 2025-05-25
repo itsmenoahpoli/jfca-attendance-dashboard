@@ -16,6 +16,7 @@ import { useDashboardService } from "@/services/dashboard.service";
 import { useAttendanceService } from "@/services/attendance.service";
 import { WEB_ROUTES } from "@/constants";
 import { AttendanceTable } from "@/components/modules/attendance/AttendanceTable";
+import { type AttendanceLog } from "@/services/attendance.service";
 
 type StatCardProps = {
   title: string;
@@ -62,9 +63,11 @@ export const OverviewPage: React.FC = () => {
     queryFn: getDashboardStats,
   });
 
-  const { data: attendanceLogs = [], isLoading: isLogsLoading } = useQuery({
+  const { data: attendanceLogs = [], isLoading: isLogsLoading } = useQuery<
+    AttendanceLog[]
+  >({
     queryKey: ["attendance-logs"],
-    queryFn: getAttendanceLogs,
+    queryFn: () => getAttendanceLogs(),
   });
 
   const stats = [
@@ -94,6 +97,13 @@ export const OverviewPage: React.FC = () => {
       value: dashboardStats?.total_users ?? 0,
       icon: <UserCog size={24} className="text-orange-600" />,
       color: "border-orange-600",
+    },
+    {
+      title: "Teacher Accounts",
+      value: dashboardStats?.total_teachers ?? 0,
+      icon: <Users size={24} className="text-indigo-600" />,
+      color: "border-indigo-600",
+      link: WEB_ROUTES.DASHBOARD_USERS,
     },
   ];
 

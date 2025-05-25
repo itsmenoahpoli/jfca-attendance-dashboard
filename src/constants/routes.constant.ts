@@ -21,6 +21,7 @@ const WEB_ROUTES = {
   DASHBOARD_STUDENTS: appendDashboardPrefix("/students"),
   DASHBOARD_CLASSES: appendDashboardPrefix("/classes"),
   DASHBOARD_ATTENDANCE_REPORTS: appendDashboardPrefix("/attendance-reports"),
+  DASHBOARD_USERS: appendDashboardPrefix("/users"),
   MODULE_ATTENDANCE: appendModulePrefix("/attendance"),
 };
 

@@ -2,7 +2,9 @@ import { useApi } from "@/hooks/use-api.hook";
 
 export interface Student {
   id: string;
-  name: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
   email: string;
   gender: string;
   contact: string;
@@ -28,7 +30,9 @@ export interface Student {
 }
 
 export interface CreateStudentData {
-  name: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
   email: string;
   gender: string;
   contact: string;
@@ -57,7 +61,9 @@ export const useStudentsService = () => {
   const createStudent = async (data: CreateStudentData): Promise<Student> => {
     const formData = new FormData();
 
-    formData.append("name", data.name);
+    formData.append("first_name", data.first_name);
+    formData.append("middle_name", data.middle_name);
+    formData.append("last_name", data.last_name);
     formData.append("email", data.email);
     formData.append("gender", data.gender);
     formData.append("contact", data.contact);
@@ -116,7 +122,9 @@ export const useStudentsService = () => {
   ): Promise<Student> => {
     const formData = new FormData();
 
-    if (data.name) formData.append("name", data.name);
+    if (data.first_name) formData.append("first_name", data.first_name);
+    if (data.middle_name) formData.append("middle_name", data.middle_name);
+    if (data.last_name) formData.append("last_name", data.last_name);
     if (data.email) formData.append("email", data.email);
     if (data.gender) formData.append("gender", data.gender);
     if (data.contact) formData.append("contact", data.contact);

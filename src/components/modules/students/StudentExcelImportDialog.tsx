@@ -9,6 +9,7 @@ interface StudentExcelImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sectionId: string;
+  onImportSuccess?: () => void;
 }
 
 interface ExcelStudent {
@@ -26,7 +27,7 @@ interface ExcelStudent {
 
 export const StudentExcelImportDialog: React.FC<
   StudentExcelImportDialogProps
-> = ({ open, onOpenChange, sectionId }) => {
+> = ({ open, onOpenChange, sectionId, onImportSuccess }) => {
   const [file, setFile] = React.useState<File | null>(null);
   const [parsedData, setParsedData] = React.useState<ExcelStudent[]>([]);
   const [error, setError] = React.useState<string | null>(null);
@@ -42,7 +43,9 @@ export const StudentExcelImportDialog: React.FC<
     mutationFn: async (students: ExcelStudent[]) => {
       const promises = students.map((student) => {
         return studentsService.createStudent({
-          name: `${student["First Name"]} ${student["Middle Name"]} ${student["Last Name"]}`.trim(),
+          first_name: student["First Name"],
+          middle_name: student["Middle Name"],
+          last_name: student["Last Name"],
           email: student["Email Address"],
           gender: student.Gender,
           contact: student["Contact Number"],
@@ -63,6 +66,7 @@ export const StudentExcelImportDialog: React.FC<
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.refetchQueries({ queryKey: ["sections"] });
       queryClient.refetchQueries({ queryKey: ["students"] });
+      if (onImportSuccess) onImportSuccess();
       setAlert({ type: "success", message: "Students imported successfully" });
       setTimeout(() => {
         onOpenChange(false);
@@ -155,7 +159,16 @@ export const StudentExcelImportDialog: React.FC<
   };
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          queryClient.invalidateQueries({ queryKey: ["sections"] });
+          queryClient.refetchQueries({ queryKey: ["sections"] });
+        }
+        onOpenChange(isOpen);
+      }}
+    >
       <Dialog.Content className="!w-[90vw] !max-w-[90vw]">
         <Dialog.Title>Import Students from Excel</Dialog.Title>
         <Dialog.Description className="text-gray-500 mb-4">

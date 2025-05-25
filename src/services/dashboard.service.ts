@@ -5,6 +5,7 @@ export interface DashboardStats {
   total_sections: number;
   total_user_roles: number;
   total_users: number;
+  total_teachers: number;
 }
 
 export const useDashboardService = () => {
