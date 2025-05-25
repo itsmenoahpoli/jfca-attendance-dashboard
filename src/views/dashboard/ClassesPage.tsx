@@ -415,6 +415,9 @@ export const ClassesPage: React.FC = () => {
               selectedSection.id
             );
             setSelectedSection(updatedSection);
+            queryClient.refetchQueries({
+              queryKey: ["section", selectedSection.id],
+            });
           }
         }}
       />
