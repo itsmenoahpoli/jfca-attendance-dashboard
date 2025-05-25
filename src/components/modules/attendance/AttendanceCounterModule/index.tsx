@@ -82,13 +82,13 @@ const StudentDataBanner: React.FC<{
               {student.images?.facefront ? (
                 <img
                   src={student.images.facefront}
-                  alt={student.name}
+                  alt={student.first_name}
                   className="w-48 h-48 rounded-full object-cover"
                 />
               ) : (
                 <div className="w-48 h-48 rounded-full bg-gray-200 flex items-center justify-center">
                   <span className="text-6xl text-gray-500">
-                    {student.name.charAt(0).toUpperCase()}
+                    {student.first_name.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
@@ -102,7 +102,9 @@ const StudentDataBanner: React.FC<{
 
               <div>
                 <p className="text-sm text-gray-500">Name</p>
-                <p className="font-medium">{student.name}</p>
+                <p className="font-medium">
+                  {student.first_name} {student.middle_name} {student.last_name}
+                </p>
               </div>
 
               <div>
