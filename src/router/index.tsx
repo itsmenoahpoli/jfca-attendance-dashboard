@@ -8,6 +8,7 @@ import {
   ClassesPage,
   AttendanceReportsPage,
   AttendanceModulePage,
+  UserAccountsPage,
 } from "@/views";
 import {
   WEB_ROUTES,
@@ -53,6 +54,10 @@ const router = createBrowserRouter([
       {
         path: WEB_ROUTES.DASHBOARD_ATTENDANCE_REPORTS,
         element: <AttendanceReportsPage />,
+      },
+      {
+        path: WEB_ROUTES.DASHBOARD_USER_ACCOUNTS,
+        element: <UserAccountsPage />,
       },
     ],
   },

@@ -22,6 +22,7 @@ const WEB_ROUTES = {
   DASHBOARD_CLASSES: appendDashboardPrefix("/classes"),
   DASHBOARD_ATTENDANCE_REPORTS: appendDashboardPrefix("/attendance-reports"),
   DASHBOARD_USERS: appendDashboardPrefix("/users"),
+  DASHBOARD_USER_ACCOUNTS: appendDashboardPrefix("/users"),
   MODULE_ATTENDANCE: appendModulePrefix("/attendance"),
 };
 
@@ -31,6 +32,9 @@ const API_ROUTES = {
   },
   SECTIONS: {
     LIST: "/sections",
+  },
+  USERS: {
+    LIST: "/users",
   },
 };
 
