@@ -94,81 +94,22 @@ const StudentDataBanner: React.FC<{
               )}
             </Flex>
 
-            <Flex gap="8">
-              <div className="flex-1 space-y-4">
-                <p className="text-sm font-medium text-gray-700 mb-3">
-                  Student Information
-                </p>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Name</p>
-                    <p className="font-medium">{student.name}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">
-                      Student Record ID (System)
-                    </p>
-                    <p className="font-medium">{student.id}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Student ID</p>
-                    <p className="font-medium">{student.student_key}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="font-medium">{student.email}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Gender</p>
-                    <p className="font-medium">{student.gender}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Contact</p>
-                    <p className="font-medium">{student.contact || "-"}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Section</p>
-                    <p className="font-medium">
-                      {student.section?.name || "-"}
-                    </p>
-                  </div>
-                </div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Student ID</p>
+                <p className="font-medium">{student.student_key}</p>
               </div>
 
-              <div className="flex-1 space-y-4">
-                <p className="text-sm font-medium text-gray-700 mb-3">
-                  Guardian Information
-                </p>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Name</p>
-                    <p className="font-medium">
-                      {student.guardian_name || "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Relation</p>
-                    <p className="font-medium">
-                      {student.guardian_relation || "-"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-500">Contact</p>
-                    <p className="font-medium">
-                      {student.guardian_mobile_number || "-"}
-                    </p>
-                  </div>
-                </div>
+              <div>
+                <p className="text-sm text-gray-500">Name</p>
+                <p className="font-medium">{student.name}</p>
               </div>
-            </Flex>
+
+              <div>
+                <p className="text-sm text-gray-500">Section</p>
+                <p className="font-medium">{student.section?.name || "-"}</p>
+              </div>
+            </div>
           </Flex>
         </div>
       ) : (
