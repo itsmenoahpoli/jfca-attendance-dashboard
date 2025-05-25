@@ -12,7 +12,9 @@ interface StudentExcelImportDialogProps {
 }
 
 interface ExcelStudent {
-  "Student Name": string;
+  "First Name": string;
+  "Middle Name": string;
+  "Last Name": string;
   "Email Address": string;
   Gender: string;
   "Contact Number": string;
@@ -40,7 +42,7 @@ export const StudentExcelImportDialog: React.FC<
     mutationFn: async (students: ExcelStudent[]) => {
       const promises = students.map((student) => {
         return studentsService.createStudent({
-          name: student["Student Name"],
+          name: `${student["First Name"]} ${student["Middle Name"]} ${student["Last Name"]}`.trim(),
           email: student["Email Address"],
           gender: student.Gender,
           contact: student["Contact Number"],
@@ -87,7 +89,8 @@ export const StudentExcelImportDialog: React.FC<
         const jsonData = XLSX.utils.sheet_to_json<ExcelStudent>(worksheet);
 
         const requiredColumns = [
-          "Student Name",
+          "First Name",
+          "Last Name",
           "Email Address",
           "Gender",
           "Contact Number",
@@ -157,9 +160,9 @@ export const StudentExcelImportDialog: React.FC<
         <Dialog.Title>Import Students from Excel</Dialog.Title>
         <Dialog.Description className="text-gray-500 mb-4">
           Upload an Excel file containing student information. The file should
-          include columns for Student Name, Email Address, Gender, Contact
-          Number, Guardian Name, Guardian Contact Number, Guardian Relation, and
-          Section.
+          include columns for First Name, Middle Name (optional), Last Name,
+          Email Address, Gender, Contact Number, Guardian Name, Guardian Contact
+          Number, Guardian Relation, and Section.
         </Dialog.Description>
 
         {alert && (
@@ -248,98 +251,59 @@ export const StudentExcelImportDialog: React.FC<
                 <Table.Root variant="surface">
                   <Table.Header>
                     <Table.Row className="bg-gray-50/50">
-                      <Table.ColumnHeaderCell className="font-medium text-gray-600">
-                        Name
+                      <Table.ColumnHeaderCell>
+                        First Name
                       </Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell className="font-medium text-gray-600">
-                        Email
+                      <Table.ColumnHeaderCell>
+                        Middle Name
                       </Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell className="font-medium text-gray-600">
-                        Gender
-                      </Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell className="font-medium text-gray-600">
-                        Contact Number
-                      </Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell className="font-medium text-gray-600">
+                      <Table.ColumnHeaderCell>Last Name</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Gender</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Contact</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>
                         Guardian Name
                       </Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell className="font-medium text-gray-600">
-                        Guardian Relation
-                      </Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell className="font-medium text-gray-600">
+                      <Table.ColumnHeaderCell>
                         Guardian Contact
+                      </Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>
+                        Guardian Relation
                       </Table.ColumnHeaderCell>
                     </Table.Row>
                   </Table.Header>
                   <Table.Body>
                     {parsedData.map((student, index) => (
-                      <Table.Row
-                        key={index}
-                        className="hover:bg-gray-50/50 transition-colors"
-                      >
-                        <Table.Cell className="text-gray-700">
-                          {student["Student Name"]}
-                        </Table.Cell>
-                        <Table.Cell className="text-gray-700">
-                          {student["Email Address"]}
-                        </Table.Cell>
-                        <Table.Cell className="text-gray-700">
-                          {student.Gender}
-                        </Table.Cell>
-                        <Table.Cell className="text-gray-700">
-                          {student["Contact Number"]}
-                        </Table.Cell>
-                        <Table.Cell className="text-gray-700">
-                          {student["Guardian Name"]}
-                        </Table.Cell>
-                        <Table.Cell className="text-gray-700">
-                          {student["Guardian Relation"]}
-                        </Table.Cell>
-                        <Table.Cell className="text-gray-700">
+                      <Table.Row key={index}>
+                        <Table.Cell>{student["First Name"]}</Table.Cell>
+                        <Table.Cell>{student["Middle Name"]}</Table.Cell>
+                        <Table.Cell>{student["Last Name"]}</Table.Cell>
+                        <Table.Cell>{student["Email Address"]}</Table.Cell>
+                        <Table.Cell>{student.Gender}</Table.Cell>
+                        <Table.Cell>{student["Contact Number"]}</Table.Cell>
+                        <Table.Cell>{student["Guardian Name"]}</Table.Cell>
+                        <Table.Cell>
                           {student["Guardian Contact Number"]}
                         </Table.Cell>
+                        <Table.Cell>{student["Guardian Relation"]}</Table.Cell>
                       </Table.Row>
                     ))}
                   </Table.Body>
                 </Table.Root>
               </div>
+              <Flex justify="end" mt="4">
+                <Button
+                  onClick={handleImport}
+                  disabled={importMutation.isPending}
+                >
+                  {importMutation.isPending
+                    ? "Importing..."
+                    : "Import Students"}
+                </Button>
+              </Flex>
             </div>
           )}
         </div>
-
-        <Flex gap="3" mt="4" justify="end">
-          <Button
-            variant="soft"
-            color="gray"
-            onClick={() => {
-              onOpenChange(false);
-              setFile(null);
-              setParsedData([]);
-              setError(null);
-              setAlert(null);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            color="blue"
-            disabled={
-              !file || importMutation.isPending || parsedData.length === 0
-            }
-            onClick={handleImport}
-          >
-            {importMutation.isPending ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Importing Students...</span>
-              </div>
-            ) : parsedData.length > 0 ? (
-              "Confirm & Upload Students"
-            ) : (
-              "Import"
-            )}
-          </Button>
-        </Flex>
       </Dialog.Content>
     </Dialog.Root>
   );

@@ -11,17 +11,36 @@ import { useSectionsService } from "@/services/sections.service";
 import { useQuery } from "@tanstack/react-query";
 
 const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
+  first_name: z
+    .string()
+    .min(1, "First name is required")
+    .regex(/^[A-Za-z\s]+$/, "First name should only contain letters"),
+  middle_name: z
+    .string()
+    .regex(/^[A-Za-z\s]*$/, "Middle name should only contain letters"),
+  last_name: z
+    .string()
+    .min(1, "Last name is required")
+    .regex(/^[A-Za-z\s]+$/, "Last name should only contain letters"),
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
   gender: z.string().min(1, "Gender is required"),
-  contact: z.string().min(1, "Contact number is required"),
-  guardian_name: z.string().min(1, "Guardian name is required"),
+  contact: z
+    .string()
+    .min(1, "Contact number is required")
+    .regex(/^\d+$/, "Contact number should only contain numbers"),
+  guardian_name: z
+    .string()
+    .min(1, "Guardian name is required")
+    .regex(/^[A-Za-z\s]+$/, "Guardian name should only contain letters"),
   guardian_relation: z.string().min(1, "Guardian relation is required"),
-  guardian_mobile_number: z.string().min(1, "Guardian contact is required"),
+  guardian_mobile_number: z
+    .string()
+    .min(1, "Guardian contact is required")
+    .regex(/^\d+$/, "Guardian contact should only contain numbers"),
   section: z.string().min(1, "Section is required"),
-  leftSideImage: z.string().optional(),
-  frontSideImage: z.string().optional(),
-  rightSideImage: z.string().optional(),
+  leftSideImage: z.string().min(1, "Left side image is required"),
+  frontSideImage: z.string().min(1, "Front side image is required"),
+  rightSideImage: z.string().min(1, "Right side image is required"),
 });
 
 export type StudentProfileFormData = z.infer<typeof formSchema>;
@@ -37,7 +56,9 @@ type StudentProfileFormProps = {
 };
 
 const initStudentState: StudentProfileFormData = {
-  name: "",
+  first_name: "",
+  middle_name: "",
+  last_name: "",
   email: "",
   gender: "",
   contact: "",
@@ -83,7 +104,10 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
 
   React.useEffect(() => {
     if (initialData) {
-      setValue("name", initialData.name || "");
+      const nameParts = initialData.name?.split(" ") || ["", "", ""];
+      setValue("first_name", nameParts[0] || "");
+      setValue("middle_name", nameParts[1] || "");
+      setValue("last_name", nameParts[2] || "");
       setValue("email", initialData.email || "");
       setValue("gender", initialData.gender || "");
       setValue("contact", initialData.contact || "");
@@ -154,7 +178,9 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
   };
 
   const resetForm = () => {
-    setValue("name", "");
+    setValue("first_name", "");
+    setValue("middle_name", "");
+    setValue("last_name", "");
     setValue("email", "");
     setValue("gender", "");
     setValue("contact", "");
@@ -309,22 +335,66 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Student Name
+                First Name
               </label>
               <Controller
-                name="name"
+                name="first_name"
                 control={control}
                 render={({ field }) => (
                   <TextField.Root
                     type="text"
-                    placeholder="Enter student name"
+                    placeholder="Enter first name"
                     {...field}
-                  ></TextField.Root>
+                  />
                 )}
               />
-              {errors.name && (
+              {errors.first_name && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.name.message}
+                  {errors.first_name.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Middle Name
+              </label>
+              <Controller
+                name="middle_name"
+                control={control}
+                render={({ field }) => (
+                  <TextField.Root
+                    type="text"
+                    placeholder="Enter middle name (optional)"
+                    {...field}
+                  />
+                )}
+              />
+              {errors.middle_name && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.middle_name.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Last Name
+              </label>
+              <Controller
+                name="last_name"
+                control={control}
+                render={({ field }) => (
+                  <TextField.Root
+                    type="text"
+                    placeholder="Enter last name"
+                    {...field}
+                  />
+                )}
+              />
+              {errors.last_name && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.last_name.message}
                 </p>
               )}
             </div>
