@@ -4,7 +4,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { Dialog, Flex, Select } from "@radix-ui/themes";
+import { Dialog, Flex, Select, Button } from "@radix-ui/themes";
 import { type AttendanceLog } from "@/services/attendance.service";
 import { FileText } from "lucide-react";
 import jsPDF from "jspdf";
@@ -34,6 +34,15 @@ const getStatusBadgeColor = (log: AttendanceLog) => {
     return "bg-green-100 text-green-800";
   }
   return "bg-orange-100 text-orange-800";
+};
+
+const splitName = (fullName: string) => {
+  const parts = fullName.split(" ");
+  return {
+    firstName: parts[0] || "",
+    middleName: parts[1] || "",
+    lastName: parts[2] || "",
+  };
 };
 
 const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
@@ -135,12 +144,15 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
       doc.text(section, margin, yPosition);
       yPosition += 10;
 
-      const tableData = sectionLogs.map((log) => [
-        log.student.name,
-        log.time_in ? format(new Date(log.time_in), "h:mm a") : "-",
-        log.time_out ? format(new Date(log.time_out), "h:mm a") : "-",
-        getStatus(log),
-      ]);
+      const tableData = sectionLogs.map((log) => {
+        const { firstName, middleName, lastName } = splitName(log.student.name);
+        return [
+          `${firstName} ${middleName} ${lastName}`.trim(),
+          log.time_in ? format(new Date(log.time_in), "h:mm a") : "-",
+          log.time_out ? format(new Date(log.time_out), "h:mm a") : "-",
+          getStatus(log),
+        ];
+      });
 
       autoTable(doc, {
         startY: yPosition,
@@ -235,7 +247,13 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Student
+                              First Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Middle Name
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Last Name
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Time In
@@ -249,58 +267,42 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {sectionLogs.map((log) => (
-                            <tr
-                              key={`${log.student_id}-${log.date_recorded}`}
-                              className="hover:bg-gray-50"
-                            >
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                  <div className="h-10 w-10 flex-shrink-0">
-                                    {log.student.profile_photo ? (
-                                      <img
-                                        src={log.student.profile_photo}
-                                        alt={log.student.name}
-                                        className="h-10 w-10 rounded-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                        <span className="text-sm font-medium text-blue-600">
-                                          {log.student.name
-                                            .charAt(0)
-                                            .toUpperCase()}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="ml-4">
-                                    <div className="text-sm font-medium text-gray-900">
-                                      {log.student.name}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {log.time_in
-                                  ? format(new Date(log.time_in), "h:mm a")
-                                  : "-"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {log.time_out
-                                  ? format(new Date(log.time_out), "h:mm a")
-                                  : "-"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <span
-                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
-                                    log
-                                  )}`}
-                                >
-                                  {getStatus(log)}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
+                          {sectionLogs.map((log) => {
+                            const { firstName, middleName, lastName } =
+                              splitName(log.student.name);
+                            return (
+                              <tr key={log.student_id}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {firstName}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {middleName}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  {lastName}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {log.time_in
+                                    ? format(new Date(log.time_in), "h:mm a")
+                                    : "-"}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {log.time_out
+                                    ? format(new Date(log.time_out), "h:mm a")
+                                    : "-"}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span
+                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeColor(
+                                      log
+                                    )}`}
+                                  >
+                                    {getStatus(log)}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -311,21 +313,18 @@ const DayDetailsDialog: React.FC<DayDetailsDialogProps> = ({
           )}
         </div>
 
-        <Flex gap="3" mt="4" justify="end">
-          {totalLogs > 0 && (
-            <button
-              onClick={handleExport}
-              className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 flex items-center gap-2"
-            >
-              <FileText size={16} />
-              Export Daily Report (PDF)
-            </button>
-          )}
-          <Dialog.Close>
-            <button className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-              Close
-            </button>
-          </Dialog.Close>
+        <Flex justify="end" mt="6" gap="3">
+          <Button
+            variant="soft"
+            color="gray"
+            onClick={() => onOpenChange(false)}
+          >
+            Close
+          </Button>
+          <Button onClick={handleExport} disabled={totalLogs === 0}>
+            <FileText className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
         </Flex>
       </Dialog.Content>
     </Dialog.Root>
