@@ -8,7 +8,13 @@ import {
   useAttendanceService,
   type AttendanceLog,
 } from "@/services/attendance.service";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
+
+const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return "-";
+  const date = new Date(dateString);
+  return isValid(date) ? format(date, "MMM d, yyyy h:mm a") : "-";
+};
 
 interface StudentAttendanceLogsDialogProps {
   open: boolean;
@@ -36,23 +42,33 @@ export const StudentAttendanceLogsDialog: React.FC<
 
   const { data: attendanceLogs = [] } = useQuery({
     queryKey: ["attendance-logs", student?.id],
-    queryFn: attendanceService.getAttendanceLogs,
+    queryFn: () => attendanceService.getAttendanceLogs(),
     enabled: !!student,
   });
 
   const filteredLogs = React.useMemo(() => {
     return attendanceLogs.filter((log) => {
-      if (filters.type !== "all" && log.type !== filters.type) return false;
-      if (filters.section !== "all" && log.studentClass !== filters.section)
+      if (filters.type !== "all" && !log.time_in && filters.type === "time-in")
+        return false;
+      if (
+        filters.type !== "all" &&
+        !log.time_out &&
+        filters.type === "time-out"
+      )
+        return false;
+      if (
+        filters.section !== "all" &&
+        log.student.section.name !== filters.section
+      )
         return false;
       if (
         filters.startDate &&
-        new Date(log.recordedAt) < new Date(filters.startDate)
+        new Date(log.date_recorded) < new Date(filters.startDate)
       )
         return false;
       if (
         filters.endDate &&
-        new Date(log.recordedAt) > new Date(filters.endDate)
+        new Date(log.date_recorded) > new Date(filters.endDate)
       )
         return false;
       return true;
@@ -62,10 +78,11 @@ export const StudentAttendanceLogsDialog: React.FC<
   const groupedLogs = React.useMemo(() => {
     const groups: Record<string, AttendanceLog[]> = {};
     filteredLogs.forEach((log) => {
-      if (!groups[log.studentClass]) {
-        groups[log.studentClass] = [];
+      const sectionName = log.student.section.name;
+      if (!groups[sectionName]) {
+        groups[sectionName] = [];
       }
-      groups[log.studentClass].push(log);
+      groups[sectionName].push(log);
     });
     return groups;
   }, [filteredLogs]);
@@ -73,38 +90,41 @@ export const StudentAttendanceLogsDialog: React.FC<
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content className="!w-[90vw] !max-w-[90vw]">
-        <Dialog.Title>Attendance Logs - {student?.name}</Dialog.Title>
+        <Dialog.Title>
+          Attendance Logs -{" "}
+          {student ? `${student.first_name} ${student.last_name}` : ""}
+        </Dialog.Title>
         <Dialog.Description className="text-gray-500 mb-4">
           View attendance logs for this student.
         </Dialog.Description>
 
         <div className="mt-4">
           <Flex gap="3" mb="4">
-            <TextField.Root size="2">
+            <TextField.Root
+              type="date"
+              value={filters.startDate}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFilters((prev) => ({ ...prev, startDate: e.target.value }))
+              }
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              size="2"
+            >
               <TextField.Slot>
                 <Calendar size={16} />
               </TextField.Slot>
-              <input
-                type="date"
-                value={filters.startDate}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFilters((prev) => ({ ...prev, startDate: e.target.value }))
-                }
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              />
             </TextField.Root>
-            <TextField.Root size="2">
+            <TextField.Root
+              type="date"
+              value={filters.endDate}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setFilters((prev) => ({ ...prev, endDate: e.target.value }))
+              }
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              size="2"
+            >
               <TextField.Slot>
                 <Calendar size={16} />
               </TextField.Slot>
-              <input
-                type="date"
-                value={filters.endDate}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setFilters((prev) => ({ ...prev, endDate: e.target.value }))
-                }
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              />
             </TextField.Root>
             <Select.Root
               value={filters.type}
@@ -175,44 +195,34 @@ export const StudentAttendanceLogsDialog: React.FC<
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {logs.map((log) => (
-                        <tr key={log.id} className="hover:bg-gray-50">
+                        <tr
+                          key={log.date_recorded}
+                          className="hover:bg-gray-50"
+                        >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                log.type === "time-in"
+                                log.time_in
                                   ? "bg-green-100 text-green-800"
                                   : "bg-orange-100 text-orange-800"
                               }`}
                             >
-                              {log.type === "time-in" ? "IN" : "OUT"}
+                              {log.time_in ? "IN" : "OUT"}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {log.timeIn
-                              ? format(
-                                  new Date(log.timeIn),
-                                  "MMM d, yyyy h:mm a"
-                                )
-                              : "-"}
+                            {formatDate(log.time_in)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {log.timeOut
-                              ? format(
-                                  new Date(log.timeOut),
-                                  "MMM d, yyyy h:mm a"
-                                )
-                              : "-"}
+                            {formatDate(log.time_out)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              {log.status}
+                              {log.in_status ? "Present" : "Absent"}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {format(
-                              new Date(log.recordedAt),
-                              "MMM d, yyyy h:mm a"
-                            )}
+                            {formatDate(log.date_recorded)}
                           </td>
                         </tr>
                       ))}

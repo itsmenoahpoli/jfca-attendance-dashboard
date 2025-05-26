@@ -102,7 +102,7 @@ export const QRPreviewDialog: React.FC<QRPreviewDialogProps> = ({
 
       const tableData = sectionStudents.map((student) => [
         student.id,
-        student.name,
+        `${student.first_name} ${student.middle_name} ${student.last_name}`,
         student.email,
       ]);
 
@@ -143,7 +143,10 @@ export const QRPreviewDialog: React.FC<QRPreviewDialogProps> = ({
         doc.addImage(imgData, "PNG", currentX, currentY, qrSize, qrSize);
 
         const nameMaxWidth = columnWidth - qrSize - 20;
-        const nameLines = doc.splitTextToSize(student.name, nameMaxWidth);
+        const nameLines = doc.splitTextToSize(
+          `${student.first_name} ${student.middle_name} ${student.last_name}`,
+          nameMaxWidth
+        );
         doc.setFontSize(10);
         doc.text(nameLines, currentX + qrSize + 10, currentY + 10);
         doc.setFontSize(8);
@@ -203,7 +206,9 @@ export const QRPreviewDialog: React.FC<QRPreviewDialogProps> = ({
                         <AppQRCode value={student.id} size={100} color="gray" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-medium text-sm">{student.name}</h3>
+                        <h3 className="font-medium text-sm">
+                          {`${student.first_name} ${student.middle_name} ${student.last_name}`}
+                        </h3>
                         <p className="text-xs text-gray-500">
                           ID: {student.id}
                         </p>

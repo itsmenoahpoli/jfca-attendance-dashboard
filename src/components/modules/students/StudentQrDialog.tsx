@@ -15,6 +15,10 @@ export const StudentQRDialog: React.FC<StudentQRDialogProps> = ({
   onOpenChange,
   student,
 }) => {
+  const getFullName = (student: Student) => {
+    return `${student.first_name} ${student.middle_name} ${student.last_name}`.trim();
+  };
+
   const handlePrintQR = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow || !student) return;
@@ -26,7 +30,7 @@ export const StudentQRDialog: React.FC<StudentQRDialogProps> = ({
     printWindow.document.write(`
       <html>
         <head>
-          <title>Student QR Code - ${student.name}</title>
+          <title>Student QR Code - ${getFullName(student)}</title>
           <style>
             body {
               display: flex;
@@ -65,7 +69,7 @@ export const StudentQRDialog: React.FC<StudentQRDialogProps> = ({
           <div class="qr-container">
             ${svgMarkup}
             <div class="student-info">
-              <div class="student-name">${student.name}</div>
+              <div class="student-name">${getFullName(student)}</div>
               <div class="student-id">${student.id}</div>
             </div>
           </div>
@@ -100,7 +104,7 @@ export const StudentQRDialog: React.FC<StudentQRDialogProps> = ({
                 <AppQRCode value={`${student.id}`} size={200} />
               </div>
               <p className="mt-4 !text-xs font-medium text-gray-500">
-                {student.name}
+                {getFullName(student)}
               </p>
               <p className="mt-4 !text-xs font-medium text-gray-500">
                 {student.id}

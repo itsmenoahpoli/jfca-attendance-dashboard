@@ -104,10 +104,9 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
 
   React.useEffect(() => {
     if (initialData) {
-      const nameParts = initialData.name?.split(" ") || ["", "", ""];
-      setValue("first_name", nameParts[0] || "");
-      setValue("middle_name", nameParts[1] || "");
-      setValue("last_name", nameParts[2] || "");
+      setValue("first_name", initialData.first_name || "");
+      setValue("middle_name", initialData.middle_name || "");
+      setValue("last_name", initialData.last_name || "");
       setValue("email", initialData.email || "");
       setValue("gender", initialData.gender || "");
       setValue("contact", initialData.contact || "");
@@ -208,30 +207,6 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
       resetForm();
     }
     onOpenChange(open);
-  };
-
-  const handleAddStudent = (data: StudentProfileFormData) => {
-    const apiData = {
-      first_name: data.first_name,
-      middle_name: data.middle_name,
-      last_name: data.last_name,
-      email: data.email,
-      gender: data.gender,
-      contact: data.contact,
-      guardian_name: data.guardian_name,
-      guardian_relation: data.guardian_relation,
-      guardian_mobile_number: data.guardian_mobile_number,
-      section_id: section?.id || data.section,
-      leftSideImage: data.leftSideImage,
-      frontSideImage: data.frontSideImage,
-      rightSideImage: data.rightSideImage,
-    };
-
-    if (section) {
-      onSubmit(data);
-    } else {
-      onSubmit(data);
-    }
   };
 
   return (
