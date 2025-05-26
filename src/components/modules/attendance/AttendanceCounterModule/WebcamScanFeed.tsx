@@ -2,11 +2,17 @@ import React, { useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
 import { Button, Switch } from "@radix-ui/themes";
 import * as faceapi from "face-api.js";
+import { useAttendanceService } from "@/services/attendance.service";
+import { type Student, useStudentsService } from "@/services/students.service";
 
 interface WebcamScanFeedProps {
   isEnabled: boolean;
   autoCapture?: boolean;
   onCapture?: (image: string) => void;
+  onStudentScanned?: (
+    student: Student | null,
+    status?: { in_status: boolean; out_status: boolean }
+  ) => void;
 }
 
 const videoConstraints = {
@@ -19,6 +25,7 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
   isEnabled,
   autoCapture: initialAutoCapture = false,
   onCapture,
+  onStudentScanned,
 }) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,6 +40,8 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
   const isDetecting = useRef(true);
   const detectionFrameId = useRef<number>();
   const isCapturing = useRef(false);
+  const { recognizeFace, timeInOut } = useAttendanceService();
+  const { getStudent } = useStudentsService();
 
   useEffect(() => {
     const loadModels = async () => {
@@ -170,6 +179,7 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
       setCountdown(null);
       setIsFetchingStudent(true);
       onCapture?.(imageSrc);
+      handlePhotoCapture(imageSrc);
     }
   }, [onCapture]);
 
@@ -182,6 +192,28 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
     isDetecting.current = true;
     setIsFetchingStudent(false);
     detectFaces();
+  };
+
+  const handlePhotoCapture = async (base64Image: string) => {
+    try {
+      const result = await recognizeFace(base64Image);
+
+      if (result?.student_id) {
+        const studentData = await getStudent(result.student_id);
+        const attendanceLog = await timeInOut(result.student_id);
+        onStudentScanned?.(studentData, {
+          in_status: attendanceLog.in_status,
+          out_status: attendanceLog.out_status,
+        });
+      } else {
+        onStudentScanned?.(null);
+      }
+    } catch (error) {
+      console.log(error);
+      onStudentScanned?.(null);
+    } finally {
+      setIsFetchingStudent(false);
+    }
   };
 
   return (

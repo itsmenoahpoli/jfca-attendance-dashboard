@@ -223,6 +223,7 @@ export const AttendanceCounterModule: React.FC<
             <WebcamScanFeed
               isEnabled={isWebcamEnabled}
               onCapture={handleImageCapture}
+              onStudentScanned={handleStudentScanned}
             />
           ) : (
             <QrScanFeed

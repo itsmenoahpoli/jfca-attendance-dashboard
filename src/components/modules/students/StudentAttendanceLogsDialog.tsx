@@ -78,6 +78,7 @@ export const StudentAttendanceLogsDialog: React.FC<
   const groupedLogs = React.useMemo(() => {
     const groups: Record<string, AttendanceLog[]> = {};
     filteredLogs.forEach((log) => {
+      if (!log.student?.section?.name) return;
       const sectionName = log.student.section.name;
       if (!groups[sectionName]) {
         groups[sectionName] = [];
