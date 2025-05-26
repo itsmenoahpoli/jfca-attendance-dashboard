@@ -2,12 +2,14 @@ import React, { useState, useEffect, ChangeEvent } from "react";
 import { ASSETS } from "@/constants";
 import { AttendanceCounterModule } from "@/components";
 import { Switch, Dialog, TextField, Button, Flex } from "@radix-ui/themes";
-import { Lock, Eye, EyeOff } from "lucide-react";
+import { Lock, Eye, EyeOff, LogOut } from "lucide-react";
 
 export const AttendanceModulePage: React.FC = () => {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [isWebcamEnabled, setIsWebcamEnabled] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem("isAuthenticated") === "true";
+  });
   const [passcode, setPasscode] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,10 +38,16 @@ export const AttendanceModulePage: React.FC = () => {
   const handlePasscodeSubmit = () => {
     if (passcode === CORRECT_PASSCODE) {
       setIsAuthenticated(true);
+      localStorage.setItem("isAuthenticated", "true");
       setError("");
     } else {
       setError("Incorrect passcode. Please try again.");
     }
+  };
+
+  const handleSignOut = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("isAuthenticated");
   };
 
   return (
@@ -50,8 +58,21 @@ export const AttendanceModulePage: React.FC = () => {
           alt="JCFA Logo"
           className="w-[150px] mx-auto mb-4"
         />
-        <div className="absolute top-0 right-4 text-xl font-medium text-red-500">
-          {formattedDateTime}
+        <div className="absolute top-0 right-4 flex items-center gap-4">
+          <div className="text-xl font-medium text-red-500">
+            {formattedDateTime}
+          </div>
+          {isAuthenticated && (
+            <Button
+              variant="soft"
+              color="red"
+              onClick={handleSignOut}
+              className="flex items-center gap-2"
+            >
+              <LogOut size={18} />
+              Sign Out
+            </Button>
+          )}
         </div>
       </div>
       <h1 className="text-2xl text-center text-black font-bold">

@@ -6,6 +6,7 @@ import * as faceapi from "face-api.js";
 interface WebcamScanFeedProps {
   isEnabled: boolean;
   autoCapture?: boolean;
+  onCapture?: (image: string) => void;
 }
 
 const videoConstraints = {
@@ -17,6 +18,7 @@ const videoConstraints = {
 export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
   isEnabled,
   autoCapture: initialAutoCapture = false,
+  onCapture,
 }) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -26,6 +28,7 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
   const [countdown, setCountdown] = useState<number | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [autoCapture, setAutoCapture] = useState(initialAutoCapture);
+  const [isFetchingStudent, setIsFetchingStudent] = useState(false);
   const hasStartedCountdown = useRef(false);
   const isDetecting = useRef(true);
   const detectionFrameId = useRef<number>();
@@ -91,7 +94,7 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
         autoCapture
       ) {
         hasStartedCountdown.current = true;
-        setCountdown(5);
+        setCountdown(2);
       }
 
       const ctx = canvas.getContext("2d");
@@ -139,6 +142,19 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
     return () => clearTimeout(timer);
   }, [countdown]);
 
+  useEffect(() => {
+    if (
+      autoCapture &&
+      isFaceDetected &&
+      countdown === null &&
+      !hasStartedCountdown.current &&
+      !capturedImage
+    ) {
+      hasStartedCountdown.current = true;
+      setCountdown(2);
+    }
+  }, [autoCapture, isFaceDetected, countdown, capturedImage]);
+
   const capture = React.useCallback(() => {
     if (!webcamRef.current) return;
 
@@ -149,9 +165,13 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
     isDetecting.current = false;
 
     const imageSrc = webcamRef.current.getScreenshot();
-    setCapturedImage(imageSrc);
-    setCountdown(null);
-  }, []);
+    if (imageSrc) {
+      setCapturedImage(imageSrc);
+      setCountdown(null);
+      setIsFetchingStudent(true);
+      onCapture?.(imageSrc);
+    }
+  }, [onCapture]);
 
   const resetCapture = () => {
     setCapturedImage(null);
@@ -160,6 +180,7 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
     setIsFaceDetected(false);
     isCapturing.current = false;
     isDetecting.current = true;
+    setIsFetchingStudent(false);
     detectFaces();
   };
 
@@ -178,7 +199,9 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
                         : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
-                    {capturedImage
+                    {isFetchingStudent
+                      ? "Fetching student information..."
+                      : capturedImage
                       ? "Photo Captured"
                       : isFaceDetected
                       ? countdown !== null
@@ -205,20 +228,56 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
                   style={{ maxHeight: "720px", objectFit: "contain" }}
                 />
               ) : (
-                <Webcam
-                  ref={webcamRef}
-                  screenshotFormat="image/jpeg"
-                  width={1280}
-                  videoConstraints={videoConstraints}
-                  className="w-full"
-                />
-              )}
-              {!capturedImage && (
-                <canvas
-                  ref={canvasRef}
-                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                  style={{ zIndex: 1 }}
-                />
+                <>
+                  <Webcam
+                    ref={webcamRef}
+                    screenshotFormat="image/jpeg"
+                    width={1280}
+                    videoConstraints={videoConstraints}
+                    className="w-full"
+                  />
+                  {countdown !== null && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                      <div className="relative w-48 h-48">
+                        <svg className="w-full h-full" viewBox="0 0 100 100">
+                          <circle
+                            className="text-gray-200"
+                            strokeWidth="8"
+                            stroke="currentColor"
+                            fill="transparent"
+                            r="40"
+                            cx="50"
+                            cy="50"
+                          />
+                          <circle
+                            className="text-white"
+                            strokeWidth="8"
+                            strokeDasharray={251.2}
+                            strokeDashoffset={
+                              251.2 - (251.2 * (2 - countdown)) / 2
+                            }
+                            strokeLinecap="round"
+                            stroke="currentColor"
+                            fill="transparent"
+                            r="40"
+                            cx="50"
+                            cy="50"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-white text-8xl font-bold">
+                            {countdown}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <canvas
+                    ref={canvasRef}
+                    className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                    style={{ zIndex: 1 }}
+                  />
+                </>
               )}
             </div>
             {error && (

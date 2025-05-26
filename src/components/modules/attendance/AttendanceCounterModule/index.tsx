@@ -132,11 +132,23 @@ const FullScreenLoader = () => {
   );
 };
 
+const SectionLoader = () => {
+  return (
+    <div className="h-full w-full bg-white flex flex-col items-center justify-center z-50">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      <h1 className="text-md mt-5">
+        Querying student information, please wait
+      </h1>
+    </div>
+  );
+};
+
 export const AttendanceCounterModule: React.FC<
   AttendanceCounterModuleProps
 > = ({ isWebcamEnabled }) => {
   const [selectedFeed, setSelectedFeed] = React.useState<string>("webcam-feed");
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isFetchingStudent, setIsFetchingStudent] = React.useState(false);
   const [scannedStudent, setScannedStudent] = React.useState<Student | null>(
     null
   );
@@ -162,6 +174,7 @@ export const AttendanceCounterModule: React.FC<
     console.log("Student scanned with status:", status);
     setScannedStudent(student);
     setAttendanceStatus(status || null);
+    setIsFetchingStudent(false);
   };
 
   const handleResetScanned = () => {
@@ -169,11 +182,15 @@ export const AttendanceCounterModule: React.FC<
     setAttendanceStatus(null);
   };
 
+  const handleImageCapture = (image: string) => {
+    console.log(image);
+    setIsFetchingStudent(true);
+    // TODO: Process the image and fetch student data
+  };
+
   if (isLoading) {
     return <FullScreenLoader />;
   }
-
-  console.log("Current attendance status:", attendanceStatus);
 
   return (
     <div className="w-full h-full p-10">
@@ -203,7 +220,10 @@ export const AttendanceCounterModule: React.FC<
           </Flex>
 
           {selectedFeed === "webcam-feed" ? (
-            <WebcamScanFeed isEnabled={isWebcamEnabled} />
+            <WebcamScanFeed
+              isEnabled={isWebcamEnabled}
+              onCapture={handleImageCapture}
+            />
           ) : (
             <QrScanFeed
               isEnabled={isWebcamEnabled}
@@ -212,11 +232,15 @@ export const AttendanceCounterModule: React.FC<
           )}
         </div>
         <div className="w-full border-l border-gray-300 pl-10">
-          <StudentDataBanner
-            student={scannedStudent}
-            onReset={handleResetScanned}
-            attendanceStatus={attendanceStatus || undefined}
-          />
+          {isFetchingStudent ? (
+            <SectionLoader />
+          ) : (
+            <StudentDataBanner
+              student={scannedStudent}
+              onReset={handleResetScanned}
+              attendanceStatus={attendanceStatus || undefined}
+            />
+          )}
         </div>
       </Flex>
     </div>
