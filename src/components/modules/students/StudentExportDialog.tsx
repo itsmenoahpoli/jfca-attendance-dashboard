@@ -93,7 +93,7 @@ export const StudentExportDialog: React.FC<StudentExportDialogProps> = ({
     currentY += 10;
 
     const tableData = filteredStudents.map((student) => [
-      student.name,
+      `${student.first_name} ${student.middle_name} ${student.last_name}`,
       student.student_key,
       student.email,
       student.contact || "-",
