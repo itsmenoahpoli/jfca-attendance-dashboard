@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
-import { Button } from "@radix-ui/themes";
+import { Button, Switch } from "@radix-ui/themes";
 import * as faceapi from "face-api.js";
 
 interface WebcamScanFeedProps {
   isEnabled: boolean;
+  autoCapture?: boolean;
 }
 
 const videoConstraints = {
@@ -15,6 +16,7 @@ const videoConstraints = {
 
 export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
   isEnabled,
+  autoCapture: initialAutoCapture = false,
 }) => {
   const webcamRef = useRef<Webcam>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -23,6 +25,7 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
   const [isFaceDetected, setIsFaceDetected] = React.useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [autoCapture, setAutoCapture] = useState(initialAutoCapture);
   const hasStartedCountdown = useRef(false);
   const isDetecting = useRef(true);
   const detectionFrameId = useRef<number>();
@@ -81,7 +84,12 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
       const hasFace = detections.length > 0;
       setIsFaceDetected(hasFace);
 
-      if (hasFace && countdown === null && !hasStartedCountdown.current) {
+      if (
+        hasFace &&
+        countdown === null &&
+        !hasStartedCountdown.current &&
+        autoCapture
+      ) {
         hasStartedCountdown.current = true;
         setCountdown(5);
       }
@@ -113,6 +121,7 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
         cancelAnimationFrame(detectionFrameId.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnabled, isModelLoaded, isDetecting.current]);
 
   useEffect(() => {
@@ -156,25 +165,36 @@ export const WebcamScanFeed: React.FC<WebcamScanFeedProps> = ({
 
   return (
     <div className="w-full h-full p-10">
-      <div className="my-3 relative">
+      <div className="my-3 relative bg-white rounded-lg shadow-sm">
         {isEnabled ? (
           <>
             <div className="relative">
               <div className="absolute top-0 left-0 w-full p-2 z-10">
-                <div
-                  className={`text-center p-2 rounded-md ${
-                    isFaceDetected
-                      ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {capturedImage
-                    ? "Photo Captured"
-                    : isFaceDetected
-                    ? countdown !== null
-                      ? `Capturing in ${countdown} seconds...`
-                      : "Face Detected"
-                    : "No Face Detected"}
+                <div className="flex justify-between items-center mb-2">
+                  <div
+                    className={`text-center p-2 rounded-md ${
+                      isFaceDetected
+                        ? "bg-green-100 text-green-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
+                    {capturedImage
+                      ? "Photo Captured"
+                      : isFaceDetected
+                      ? countdown !== null
+                        ? `Capturing in ${countdown} seconds...`
+                        : "Face Detected"
+                      : "No Face Detected"}
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/90 px-3 py-1.5 rounded-md shadow-sm">
+                    <label className="text-sm text-gray-600">
+                      Auto Capture
+                    </label>
+                    <Switch
+                      checked={autoCapture}
+                      onCheckedChange={setAutoCapture}
+                    />
+                  </div>
                 </div>
               </div>
               {capturedImage ? (
